@@ -31,7 +31,8 @@ module.exports = {
             {
                 allowExpressions: true
             }
-        ]
+        ],
+        'react/prop-types': 'warn'
     },
     settings: {
         react: {
