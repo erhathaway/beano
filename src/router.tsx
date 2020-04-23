@@ -1,6 +1,7 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, ReactElement} from 'react';
+import {useId} from 'react-id-generator';
 
-import {Manager, IRouterDeclaration} from 'router-primitives';
+import {Manager, IRouterDeclaration, RouterInstance} from 'router-primitives';
 
 const routerDeclaration: IRouterDeclaration<any> = {
     name: 'root',
@@ -29,8 +30,16 @@ interface LinkProps {
     children?: React.ReactNode;
 }
 
+type Predicates = Array<(route: RouterInstance<any>) => boolean>;
+type Animations = (id: string) => void;
+interface AnimateProps {
+    when?: Array<[Predicates, Animations]>;
+    children?: ({id}: {id: string}) => any;
+}
+
 type RouterT = React.FC<Props> & {
     Link: React.FC<LinkProps>;
+    Animate: React.FC<AnimateProps>;
 };
 export const createRouterComponents = (
     routers: typeof manager['routers']
@@ -49,6 +58,7 @@ export const createRouterComponents = (
             }, ['startup']);
             return state.visible ? <>{children}</> : null;
         };
+        // eslint-disable-next-line
         const Link: React.FC<LinkProps> = ({children, action}) => {
             const link = r.link(action);
             return (
@@ -57,7 +67,40 @@ export const createRouterComponents = (
                 </a>
             );
         };
-        const updated = Object.assign(component, {Link});
+        // eslint-disable-next-line
+        const Animate: React.FC<AnimateProps> = ({when, children}) => {
+            const [_state, setState] = useState(r.state);
+            useEffect(() => {
+                if (r && r.subscribe) {
+                    r.subscribe(all => setState(all.current) as any);
+                }
+                return;
+            }, ['startup']);
+
+            const [id] = useId(); // idList: ["id1"]
+
+            const isAnimating = (when || []).reduce((hasRun, predicateAnimation) => {
+                if (hasRun) {
+                    return hasRun;
+                }
+                const shouldRun = predicateAnimation[0].reduce((acc, predicate) => {
+                    return acc && predicate(r as any);
+                }, true);
+                console.log('Found a predicte should run', shouldRun, predicateAnimation[0]);
+                if (shouldRun) {
+                    predicateAnimation[1](id);
+                    return true;
+                }
+                return hasRun;
+            }, false);
+
+            console.log('isAnimating', isAnimating);
+
+            console.log('id', id);
+            // children ? children({id}) : null;
+            return <>{children && children({id})}</>;
+        };
+        const updated = Object.assign(component, {Link, Animate});
         return {...acc, [routerName]: updated};
     }, {} as Record<string, RouterT>);
 };
