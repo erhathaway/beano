@@ -1,0 +1,62 @@
+{
+    "name": "react-typescript-parcel-boilerplate",
+    "version": "1.0.0",
+    "description": "A React, Typescript, and Parcel boilerplate",
+    "main": "index.tsx",
+    "scripts": {
+        "clean": "rimraf dist tmp",
+        "start": "parcel src/index.html --no-cache",
+        "build": "npm run clean && parcel build src/index.html",
+        "serve": "npm run clean && parcel serve src/index.html",
+        "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+        "prettier:fix": "prettier \"src/**/*\" --write",
+        "prettier:check": "prettier \"src/**/*\" --check",
+        "type-check": "tsc --noEmit",
+        "test": "jest"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "npm run test && npm run lint && npm run prettier:check && npm run type-check && npm run build"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/erhathaway/react-typescript-parcel-boilerplate.git"
+    },
+    "author": "Ethan Hathaway",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/erhathaway/react-typescript-parcel-boilerplate/issues"
+    },
+    "homepage": "https://github.com/erhathaway/react-typescript-parcel-boilerplate#readme",
+    "devDependencies": {
+        "@types/animejs": "^3.1.0",
+        "@types/jest": "^25.2.1",
+        "@types/react": "^16.9.32",
+        "@types/react-dom": "^16.9.5",
+        "@types/react-test-renderer": "^16.9.2",
+        "@types/styled-components": "^5.0.1",
+        "@typescript-eslint/eslint-plugin": "^2.26.0",
+        "@typescript-eslint/parser": "^2.27.0",
+        "eslint": "^6.8.0",
+        "eslint-config-prettier": "^6.10.1",
+        "eslint-plugin-jest": "^23.8.2",
+        "eslint-plugin-react": "^7.19.0",
+        "husky": "^4.2.3",
+        "jest": "^25.3.0",
+        "parcel-bundler": "^1.12.3",
+        "prettier": "^1.18.2",
+        "react-test-renderer": "^16.13.0",
+        "rimraf": "^3.0.2",
+        "ts-jest": "^25.3.0",
+        "typescript": "^3.8.3"
+    },
+    "dependencies": {
+        "animejs": "^3.1.0",
+        "mobx": "^5.15.4",
+        "mobx-react": "^6.2.2",
+        "react": "^16.13.1",
+        "react-dom": "^16.13.0",
+        "styled-components": "^4.4.1"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "baseUrl": "src",
+        "declaration": true,
+        "esModuleInterop": true,
+        "jsx": "react",
+        "outDir": "./dist/",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "es6",
+        "skipLibCheck": true
+    },
+    "exclude": ["node_modules/*"]
+}
