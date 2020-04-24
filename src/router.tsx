@@ -31,10 +31,23 @@ interface LinkProps {
 }
 
 type Predicates = Array<(route: RouterInstance<any>) => boolean>;
-type Animations = (id: string) => void;
+
+export type AnimationCtx = {
+    id: string;
+    classNames: string[];
+    finish: Array<Promise<any>>;
+};
+type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
+
 interface AnimateProps {
     when?: Array<[Predicates, Animations]>;
-    children?: ({id}: {id: string}) => any;
+    children?: (ctx: AnimationCtx) => any;
+}
+
+interface HandleVisiblityProps {
+    ctx: AnimationCtx;
+    actionCount: number;
+    children?: (ctx: AnimationCtx) => any;
 }
 
 type RouterT = React.FC<Props> & {
@@ -67,9 +80,42 @@ export const createRouterComponents = (
                 </a>
             );
         };
+        const HandleVisiblity: React.FC<HandleVisiblityProps> = ({ctx, children, actionCount}) => {
+            const [state, setState] = useState({ctx, actionCount, transitionState: 'start'});
+            // const [state, setState] = useState('start');
+
+            if (
+                JSON.stringify(state.ctx) !== JSON.stringify(ctx) ||
+                state.actionCount !== actionCount
+            ) {
+                console.log('setting new state');
+                setState({ctx, actionCount, transitionState: 'start'});
+            }
+
+            useEffect(() => {
+                if (ctx.finish && ctx.finish.length > 0) {
+                    Promise.all(ctx.finish).then(() => {
+                        console.log('All transistions finished');
+                        setState({ctx, actionCount, transitionState: 'end'});
+                    });
+                }
+            }, [actionCount]);
+
+            if (state.transitionState === 'start' || r.state.visible) {
+                console.log('SHOWING CHILDREN', r.name);
+                const stuff = children && children(ctx);
+                console.log('rendering children');
+                return <>{stuff}</>;
+            }
+            console.log('HIDING CHILDREN', r.name);
+
+            return null;
+        };
+
         // eslint-disable-next-line
         const Animate: React.FC<AnimateProps> = ({when, children}) => {
             const [_state, setState] = useState(r.state);
+            // const forceUpdate = useForceUpdate();
             useEffect(() => {
                 if (r && r.subscribe) {
                     r.subscribe(all => setState(all.current) as any);
@@ -79,26 +125,44 @@ export const createRouterComponents = (
 
             const [id] = useId(); // idList: ["id1"]
 
-            const isAnimating = (when || []).reduce((hasRun, predicateAnimation) => {
-                if (hasRun) {
-                    return hasRun;
-                }
-                const shouldRun = predicateAnimation[0].reduce((acc, predicate) => {
-                    return acc && predicate(r as any);
-                }, true);
-                console.log('Found a predicte should run', shouldRun, predicateAnimation[0]);
-                if (shouldRun) {
-                    predicateAnimation[1](id);
-                    return true;
-                }
-                return hasRun;
-            }, false);
+            const {ctx: animationCtx} = (when || []).reduce(
+                (acc, predicateAnimation) => {
+                    const {hasRun, ctx} = acc;
+                    if (hasRun) {
+                        return acc;
+                    }
+                    const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
+                        return accc && predicate(r as any);
+                    }, true);
 
-            console.log('isAnimating', isAnimating);
+                    console.log('Found a predicate should run', shouldRun, predicateAnimation[0]);
+
+                    if (shouldRun) {
+                        const newCtx = predicateAnimation[1](ctx);
+                        if (newCtx) {
+                            return {hasRun: true, ctx: newCtx};
+                        } else {
+                            return {hasRun: true, ctx};
+                        }
+                    }
+                    return acc;
+                },
+                {hasRun: false, ctx: {id, classNames: [], finish: []}} as {
+                    hasRun: boolean;
+                    ctx: AnimationCtx;
+                }
+            );
+
+            console.log('isAnimating', animationCtx);
 
             console.log('id', id);
             // children ? children({id}) : null;
-            return <>{children && children({id})}</>;
+            // return <>{children && children(animationCtx)}</>;
+            return (
+                <HandleVisiblity ctx={animationCtx} actionCount={r.state.actionCount || 0}>
+                    {children}
+                </HandleVisiblity>
+            );
         };
         const updated = Object.assign(component, {Link, Animate});
         return {...acc, [routerName]: updated};

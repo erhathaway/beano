@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import {ExampleFeature} from '../features';
-import {routerComponents} from '../router';
+import {routerComponents, AnimationCtx} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 
@@ -25,26 +25,38 @@ const Button = styled.div`
 `;
 
 const Moon = styled.div`
+    // position: relative;
+
     height: 100;
     width: 200;
     background-color: blue;
 `;
 
 const Sun = styled.div`
+    // position: relative;
     height: 100;
     width: 200;
     background-color: yellow;
 `;
 
-const animateJustShown = (uuid: string): void => {
-    anime({
-        targets: `#${uuid}`,
-        translateX: 200
+const animateJustShown = (ctx: AnimationCtx): void => {
+    const animation = anime({
+        targets: `#${ctx.id}`,
+        translateX: [0, 200],
+        visibility: [0, 100],
+        scale: [0, 1]
     });
+    ctx.finish.push(animation.finished);
 };
 
-const animateJustHidden = (uuid: string): void => {
-    anime({targets: `#${uuid}`, translateX: -250});
+const animateJustHidden = (ctx: AnimationCtx): void => {
+    const animation = anime({
+        targets: `#${ctx.id}`,
+        translateX: [200, 400],
+        visibility: [100, 0],
+        scale: [1, 0]
+    });
+    ctx.finish.push(animation.finished);
 };
 
 const {isJustHidden, isJustShown} = statePredicates;
