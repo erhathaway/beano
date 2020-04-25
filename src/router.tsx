@@ -41,7 +41,11 @@ type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 
 interface AnimateProps {
     when?: Array<[Predicates, Animations]>;
-    children?: (...args: any[]) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
+    children?: any;
+    // children?: React.ForwardRefExoticComponent<
+    //     AnimateableProps & React.RefAttributes<HTMLDivElement>
+    // >;
+    // children?: (...args: any[]) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
     // // | Array<React.ReactElement<AnimationCtx> | JSX.Element>
     // React.ReactElement<AnimationCtx> | JSX.Element; //(ctx: AnimationCtx) => any;
 }
@@ -65,24 +69,45 @@ type RouterT = React.FC<Props> & {
 
 interface AnimateableProps {
     // id: string;
-    ctx: AnimationCtx;
-    id: string;
-    hasMounted: () => void;
-    children?: Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
+    // ctx: AnimationCtx;
+    id?: string;
+    className?: string;
+    // hasMounted: () => void;
+    children?: any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
 }
 
-class Animateable extends React.Component<AnimateableProps> {
-    static routerPrimitivesType = 'Animateable';
-    componentDidMount(): void {
-        this.props.hasMounted();
+// class Animateable extends React.Component<AnimateableProps> {
+//     static routerPrimitivesType = 'Animateable';
+//     componentDidMount(): void {
+//         console.log('$$$$$$$$', this.props.children);
+//         if (this.props.children) {
+//             if (Array.isArray(this.props.children)) {
+//                 console.log(this.props.children.map(c => (c as any).ref));
+//             }
+//         }
+//         this.props.hasMounted();
+//     }
+//     render() {
+//         if (this.props.children) {
+//             return <div id={this.props.id}>{this.props.children}</div>;
+//         }
+//         return null;
+//     }
+// }
+
+const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function animateable(
+    props,
+    ref
+) {
+    if (!props.id) {
+        throw new Error('Missing id');
     }
-    render() {
-        if (this.props.children) {
-            return <div id={this.props.id}>{this.props.children}</div>;
-        }
-        return null;
-    }
-}
+    return (
+        <div id={props.id} ref={ref} className={props.className}>
+            {props.children}
+        </div>
+    );
+});
 export {Animateable};
 
 export const createRouterComponents = (
@@ -163,49 +188,59 @@ export const createRouterComponents = (
 
             const [id] = useId(); // idList: ["id1"]
 
-            const {ctx: animationCtx} = (when || []).reduce(
-                (acc, predicateAnimation) => {
-                    const {hasRun, ctx} = acc;
-                    if (hasRun) {
-                        return acc;
-                    }
-                    const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
-                        return accc && predicate(r as any);
-                    }, true);
-
-                    console.log(
-                        'Found a predicate for: ',
-                        r.name,
-                        shouldRun,
-                        predicateAnimation[0]
-                    );
-
-                    if (shouldRun) {
-                        const newCtx = predicateAnimation[1](ctx);
-                        if (newCtx) {
-                            return {hasRun: true, ctx: newCtx};
-                        } else {
-                            return {hasRun: true, ctx};
+            const animate = (node: HTMLElement) => {
+                console.log(`-----node: `, node);
+                const {ctx: animationCtx} = (when || []).reduce(
+                    (acc, predicateAnimation) => {
+                        const {hasRun, ctx} = acc;
+                        if (hasRun) {
+                            return acc;
                         }
-                    }
-                    return acc;
-                },
-                {hasRun: false, ctx: {id, classNames: [], finish: []}} as {
-                    hasRun: boolean;
-                    ctx: AnimationCtx;
-                }
-            );
+                        const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
+                            return accc && predicate(r as any);
+                        }, true);
 
-            console.log('isAnimating', r.name, animationCtx);
+                        console.log(
+                            'Found a predicate for: ',
+                            r.name,
+                            shouldRun,
+                            predicateAnimation[0]
+                        );
+
+                        if (shouldRun) {
+                            const newCtx = predicateAnimation[1](ctx);
+                            if (newCtx) {
+                                return {hasRun: true, ctx: newCtx};
+                            } else {
+                                return {hasRun: true, ctx};
+                            }
+                        }
+                        return acc;
+                    },
+                    {hasRun: false, ctx: {id, classNames: [], finish: []}} as {
+                        hasRun: boolean;
+                        ctx: AnimationCtx;
+                    }
+                );
+            };
+
+            // console.log('isAnimating', r.name, animationCtx);
 
             console.log('id', id);
             // children ? children({id}) : null;
             // return <>{children && children(animationCtx)}</>;
-            return (
-                <HandleVisiblity ctx={animationCtx} actionCount={r.state.actionCount || 0}>
-                    {children}
-                </HandleVisiblity>
-            );
+            const refCallback = (node: HTMLDivElement): void => {
+                console.log('THIS IS MY NODE', node);
+                animate(node);
+            };
+
+            // return React.forwardRef(children);
+            return children ? React.cloneElement(children as any, {ref: refCallback, id}) : null;
+            // return (
+            //     <HandleVisiblity ctx={animationCtx} actionCount={r.state.actionCount || 0}>
+            //         {children}
+            //     </HandleVisiblity>
+            // );
         };
         const updated = Object.assign(component, {Link, Animate});
         return {...acc, [routerName]: updated};

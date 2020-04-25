@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, {ThemedStyledFunction} from 'styled-components';
+import styled from 'styled-components';
 import {ExampleFeature} from '../features';
 import {routerComponents, AnimationCtx, Animateable} from '../router';
 import {statePredicates} from 'router-primitives';
@@ -24,16 +24,20 @@ const Button = styled.div`
     border: 1px solid black;
 `;
 
-const Moon = (styled(Animateable)`
-    // position: relative;
-
-    height: 100;
+const Moon = styled.div`
+    // position: absolute;
+    // height: 100vh;
     width: 200;
     background-color: blue;
-` as unknown) as ThemedStyledFunction<'div', any, {}, never>;
+`; //as unknown) as ThemedStyledFunction<'div', any, {}, never>;
 
-const Sun = styled.div`
-    // position: relative;
+const AnimateableMoon = styled(Animateable)`
+    width: 200;
+    background-color: blue;
+`;
+
+const AnimateableSun = styled.div`
+    // position: absolute;
     height: 100;
     width: 200;
     background-color: yellow;
@@ -73,17 +77,15 @@ const Root = (): JSX.Element => {
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
-                {({hasMounted, ctx}) => (
-                    <Animateable id={ctx.id} ctx={ctx} hasMounted={hasMounted}>
-                        {'moon'}
-                        <MoonScene.Link action={'hide'}>
-                            <Button id="123">{'Hide moon'}</Button>
-                        </MoonScene.Link>
-                        <SunScene.Link action={'show'}>
-                            <Button>{'Show Sun'}</Button>
-                        </SunScene.Link>
-                    </Animateable>
-                )}
+                <AnimateableMoon>
+                    {'moon'}
+                    <MoonScene.Link action={'hide'}>
+                        <Button id="123">{'Hide moon'}</Button>
+                    </MoonScene.Link>
+                    <SunScene.Link action={'show'}>
+                        <Button>{'Show Sun'}</Button>
+                    </SunScene.Link>
+                </AnimateableMoon>
             </MoonScene.Animate>
             <SunScene.Animate
                 when={[
@@ -91,27 +93,16 @@ const Root = (): JSX.Element => {
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
-                {({ctx}) => (
-                    <Sun id={ctx.id}>
-                        {'sun'}
-                        <MoonScene.Link action={'show'}>
-                            <Button>{'Show Moon'}</Button>
-                        </MoonScene.Link>
-                        <SunScene.Link action={'hide'}>
-                            <Button>{'Hide Sun'}</Button>
-                        </SunScene.Link>
-                    </Sun>
-                )}
+                <AnimateableSun>
+                    {'sun'}
+                    <MoonScene.Link action={'show'}>
+                        <Button>{'Show Moon'}</Button>
+                    </MoonScene.Link>
+                    <SunScene.Link action={'hide'}>
+                        <Button>{'Hide Sun'}</Button>
+                    </SunScene.Link>
+                </AnimateableSun>
             </SunScene.Animate>
-            {/* <SunScene>
-                {'sun'}
-                <MoonScene.Link action={'show'}>
-                    <Button>{'Show Moon'}</Button>
-                </MoonScene.Link>
-                <SunScene.Link action={'hide'}>
-                    <Button>{'Hide Sun'}</Button>
-                </SunScene.Link>
-            </SunScene> */}
             {'main'}
             <MoonScene.Link action={'show'}>
                 <Button>{'Show Moon'}</Button>
