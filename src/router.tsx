@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect, ReactElement} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {useId} from 'react-id-generator';
 
 import {Manager, IRouterDeclaration, RouterInstance} from 'router-primitives';
@@ -41,19 +41,50 @@ type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 
 interface AnimateProps {
     when?: Array<[Predicates, Animations]>;
-    children?: (ctx: AnimationCtx) => any;
+    children?: (...args: any[]) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
+    // // | Array<React.ReactElement<AnimationCtx> | JSX.Element>
+    // React.ReactElement<AnimationCtx> | JSX.Element; //(ctx: AnimationCtx) => any;
 }
 
 interface HandleVisiblityProps {
     ctx: AnimationCtx;
     actionCount: number;
-    children?: (ctx: AnimationCtx) => any;
+    children?: ({
+        ctx,
+        hasMounted
+    }: {
+        ctx: AnimationCtx;
+        hasMounted: () => void;
+    }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
 }
 
 type RouterT = React.FC<Props> & {
     Link: React.FC<LinkProps>;
     Animate: React.FC<AnimateProps>;
 };
+
+interface AnimateableProps {
+    // id: string;
+    ctx: AnimationCtx;
+    id: string;
+    hasMounted: () => void;
+    children?: Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
+}
+
+class Animateable extends React.Component<AnimateableProps> {
+    static routerPrimitivesType = 'Animateable';
+    componentDidMount(): void {
+        this.props.hasMounted();
+    }
+    render() {
+        if (this.props.children) {
+            return <div id={this.props.id}>{this.props.children}</div>;
+        }
+        return null;
+    }
+}
+export {Animateable};
+
 export const createRouterComponents = (
     routers: typeof manager['routers']
 ): Record<string, RouterT> => {
@@ -80,6 +111,7 @@ export const createRouterComponents = (
                 </a>
             );
         };
+        // eslint-disable-next-line
         const HandleVisiblity: React.FC<HandleVisiblityProps> = ({ctx, children, actionCount}) => {
             const [state, setState] = useState({ctx, actionCount, transitionState: 'start'});
             // const [state, setState] = useState('start');
@@ -102,9 +134,15 @@ export const createRouterComponents = (
             }, [actionCount]);
 
             if (state.transitionState === 'start' || r.state.visible) {
-                console.log('SHOWING CHILDREN', r.name);
-                const stuff = children && children(ctx);
-                console.log('rendering children');
+                console.log('SHOWING CHILDREN', r.name, children);
+                if ((children as any).routerPrimitivesType) {
+                    console.log('OHHH yeah');
+                }
+                const hasMounted = () => {
+                    console.log('Mounted', r.name);
+                };
+                const stuff = children && children({ctx, hasMounted});
+                // console.log('rendering children');
                 return <>{stuff}</>;
             }
             console.log('HIDING CHILDREN', r.name);
@@ -135,7 +173,12 @@ export const createRouterComponents = (
                         return accc && predicate(r as any);
                     }, true);
 
-                    console.log('Found a predicate should run', shouldRun, predicateAnimation[0]);
+                    console.log(
+                        'Found a predicate for: ',
+                        r.name,
+                        shouldRun,
+                        predicateAnimation[0]
+                    );
 
                     if (shouldRun) {
                         const newCtx = predicateAnimation[1](ctx);
@@ -153,7 +196,7 @@ export const createRouterComponents = (
                 }
             );
 
-            console.log('isAnimating', animationCtx);
+            console.log('isAnimating', r.name, animationCtx);
 
             console.log('id', id);
             // children ? children({id}) : null;
