@@ -33,7 +33,7 @@ interface LinkProps {
 type Predicates = Array<(route: RouterInstance<any>) => boolean>;
 
 export type AnimationCtx = {
-    id: string;
+    node: HTMLElement;
     classNames: string[];
     finish: Array<Promise<any>>;
 };
@@ -125,9 +125,14 @@ export const createRouterComponents = (
             unMountOnShow
         }) => {
             const [_state, setState] = useState(r.state);
+            const [animationLifecycle, setAnimationLifecycle] = useState<
+                'initalizing' | 'running' | 'finished'
+            >('initalizing');
+
             useEffect(() => {
                 if (r && r.subscribe) {
                     setState(r.state);
+                    setAnimationLifecycle('initalizing');
                     r.subscribe(all => setState(all.current) as any);
                 }
                 return;
@@ -135,13 +140,8 @@ export const createRouterComponents = (
 
             const [id] = useId();
 
-            const [animationLifecycle, setAnimationLifecycle] = useState<
-                'initalizing' | 'running' | 'finished'
-            >('initalizing');
-
             const animate = (node: HTMLElement) => {
-                console.log('typeof node', typeof node);
-                console.log(`-----node: `, node);
+                // console.log(`-----node: `, r.name, node);
                 return (when || []).reduce(
                     (acc, predicateAnimation) => {
                         const {hasRun, ctx} = acc;
@@ -169,7 +169,7 @@ export const createRouterComponents = (
                         }
                         return acc;
                     },
-                    {hasRun: false, ctx: {id, classNames: [], finish: []}} as {
+                    {hasRun: false, ctx: {node, classNames: [], finish: []}} as {
                         hasRun: boolean;
                         ctx: AnimationCtx;
                     }
@@ -177,22 +177,31 @@ export const createRouterComponents = (
             };
 
             const refCallback = (node: HTMLDivElement): void => {
+                console.log('refCallback triggered', r.name, node);
                 // console.log('THIS IS MY NODE', node);
-                const {ctx: animationCtx, hasRun} = animate(node);
-                if (hasRun) {
-                    setAnimationLifecycle('running');
-                }
+                if (!node) {
+                    console.log('refCallback no node found', r.name);
 
-                if (animationCtx.finish.length > 0) {
-                    Promise.all(animationCtx.finish).then(() => {
-                        setAnimationLifecycle('finished');
-                    });
-                } else {
-                    setAnimationLifecycle('finished');
+                    // setAnimationLifecycle('finished');
+                    return;
                 }
+                const {ctx: animationCtx, hasRun} = animate(node);
+                console.log('refCallback hasRun', r.name, hasRun);
+
+                // if (hasRun) {
+                //     setAnimationLifecycle('running');
+                // }
+
+                // if (animationCtx.finish.length > 0) {
+                //     Promise.all(animationCtx.finish).then(() => {
+                //         setAnimationLifecycle('finished');
+                //     });
+                // } else {
+                //     setAnimationLifecycle('finished');
+                // }
             };
 
-            console.log('-- ANIMATION LIFECYCLE: ', animationLifecycle);
+            console.log('-- ANIMATION LIFECYCLE: ', r.name, animationLifecycle);
 
             const realChildren = children
                 ? React.cloneElement(children as any, {ref: refCallback, id})

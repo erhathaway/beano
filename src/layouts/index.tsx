@@ -37,8 +37,10 @@ const AnimateableSun = styled.div`
 `;
 
 const animateJustShown = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+
     const animation = anime({
-        targets: `#${ctx.id}`,
+        targets: `#${ctx.node.id}`,
         translateX: [0, 200],
         opacity: [0, 100],
         scale: [0, 1]
@@ -47,8 +49,9 @@ const animateJustShown = (ctx: AnimationCtx): void => {
 };
 
 const animateJustHidden = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
     const animation = anime({
-        targets: `#${ctx.id}`,
+        targets: `#${ctx.node.id}`,
         translateX: [200, 400],
         opacity: [100, 0],
         scale: [1, 0.8],
@@ -80,7 +83,7 @@ const Root = (): JSX.Element => {
                     </SunScene.Link>
                 </AnimateableMoon>
             </MoonScene.Animate>
-            <SunScene.Animate
+            {/* <SunScene.Animate
                 unMountOnHide
                 when={[
                     [[isJustShown as any], animateJustShown],
@@ -96,7 +99,7 @@ const Root = (): JSX.Element => {
                         <Button>{'Hide Sun'}</Button>
                     </SunScene.Link>
                 </AnimateableSun>
-            </SunScene.Animate>
+            </SunScene.Animate> */}
             {'main'}
             <MoonScene.Link action={'show'}>
                 <Button>{'Show Moon'}</Button>
