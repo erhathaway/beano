@@ -24,13 +24,6 @@ const Button = styled.div`
     border: 1px solid black;
 `;
 
-const Moon = styled.div`
-    // position: absolute;
-    // height: 100vh;
-    width: 200;
-    background-color: blue;
-`; //as unknown) as ThemedStyledFunction<'div', any, {}, never>;
-
 const AnimateableMoon = styled(Animateable)`
     width: 200;
     background-color: blue;
@@ -70,8 +63,8 @@ const {isJustHidden, isJustShown} = statePredicates;
 const Root = (): JSX.Element => {
     return (
         <RootLayoutContainer>
-            <ExampleFeature />
             <MoonScene.Animate
+                unMountOnHide
                 when={[
                     [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
@@ -88,6 +81,7 @@ const Root = (): JSX.Element => {
                 </AnimateableMoon>
             </MoonScene.Animate>
             <SunScene.Animate
+                unMountOnHide
                 when={[
                     [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]

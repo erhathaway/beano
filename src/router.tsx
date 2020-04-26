@@ -42,6 +42,8 @@ type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 interface AnimateProps {
     when?: Array<[Predicates, Animations]>;
     children?: any;
+    unMountOnHide?: boolean;
+    unMountOnShow?: boolean;
     // children?: React.ForwardRefExoticComponent<
     //     AnimateableProps & React.RefAttributes<HTMLDivElement>
     // >;
@@ -50,17 +52,17 @@ interface AnimateProps {
     // React.ReactElement<AnimationCtx> | JSX.Element; //(ctx: AnimationCtx) => any;
 }
 
-interface HandleVisiblityProps {
-    ctx: AnimationCtx;
-    actionCount: number;
-    children?: ({
-        ctx,
-        hasMounted
-    }: {
-        ctx: AnimationCtx;
-        hasMounted: () => void;
-    }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
-}
+// interface HandleVisiblityProps {
+//     ctx: AnimationCtx;
+//     actionCount: number;
+//     children?: ({
+//         ctx,
+//         hasMounted
+//     }: {
+//         ctx: AnimationCtx;
+//         hasMounted: () => void;
+//     }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
+// }
 
 type RouterT = React.FC<Props> & {
     Link: React.FC<LinkProps>;
@@ -68,32 +70,10 @@ type RouterT = React.FC<Props> & {
 };
 
 interface AnimateableProps {
-    // id: string;
-    // ctx: AnimationCtx;
     id?: string;
     className?: string;
-    // hasMounted: () => void;
     children?: any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
 }
-
-// class Animateable extends React.Component<AnimateableProps> {
-//     static routerPrimitivesType = 'Animateable';
-//     componentDidMount(): void {
-//         console.log('$$$$$$$$', this.props.children);
-//         if (this.props.children) {
-//             if (Array.isArray(this.props.children)) {
-//                 console.log(this.props.children.map(c => (c as any).ref));
-//             }
-//         }
-//         this.props.hasMounted();
-//     }
-//     render() {
-//         if (this.props.children) {
-//             return <div id={this.props.id}>{this.props.children}</div>;
-//         }
-//         return null;
-//     }
-// }
 
 const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function animateable(
     props,
@@ -136,61 +116,33 @@ export const createRouterComponents = (
                 </a>
             );
         };
-        // eslint-disable-next-line
-        const HandleVisiblity: React.FC<HandleVisiblityProps> = ({ctx, children, actionCount}) => {
-            const [state, setState] = useState({ctx, actionCount, transitionState: 'start'});
-            // const [state, setState] = useState('start');
-
-            if (
-                JSON.stringify(state.ctx) !== JSON.stringify(ctx) ||
-                state.actionCount !== actionCount
-            ) {
-                console.log('setting new state');
-                setState({ctx, actionCount, transitionState: 'start'});
-            }
-
-            useEffect(() => {
-                if (ctx.finish && ctx.finish.length > 0) {
-                    Promise.all(ctx.finish).then(() => {
-                        console.log('All transistions finished');
-                        setState({ctx, actionCount, transitionState: 'end'});
-                    });
-                }
-            }, [actionCount]);
-
-            if (state.transitionState === 'start' || r.state.visible) {
-                console.log('SHOWING CHILDREN', r.name, children);
-                if ((children as any).routerPrimitivesType) {
-                    console.log('OHHH yeah');
-                }
-                const hasMounted = () => {
-                    console.log('Mounted', r.name);
-                };
-                const stuff = children && children({ctx, hasMounted});
-                // console.log('rendering children');
-                return <>{stuff}</>;
-            }
-            console.log('HIDING CHILDREN', r.name);
-
-            return null;
-        };
 
         // eslint-disable-next-line
-        const Animate: React.FC<AnimateProps> = ({when, children}) => {
+        const Animate: React.FC<AnimateProps> = ({
+            when,
+            children,
+            unMountOnHide,
+            unMountOnShow
+        }) => {
             const [_state, setState] = useState(r.state);
-            // const forceUpdate = useForceUpdate();
             useEffect(() => {
                 if (r && r.subscribe) {
+                    setState(r.state);
                     r.subscribe(all => setState(all.current) as any);
                 }
                 return;
             }, ['startup']);
 
-            const [id] = useId(); // idList: ["id1"]
+            const [id] = useId();
+
+            const [animationLifecycle, setAnimationLifecycle] = useState<
+                'initalizing' | 'running' | 'finished'
+            >('initalizing');
 
             const animate = (node: HTMLElement) => {
+                console.log('typeof node', typeof node);
                 console.log(`-----node: `, node);
-                const {ctx: animationCtx} = (when || []).reduce(
+                return (when || []).reduce(
                     (acc, predicateAnimation) => {
                         const {hasRun, ctx} = acc;
                         if (hasRun) {
@@ -200,12 +152,12 @@ export const createRouterComponents = (
                             return accc && predicate(r as any);
                         }, true);
 
-                        console.log(
-                            'Found a predicate for: ',
-                            r.name,
-                            shouldRun,
-                            predicateAnimation[0]
-                        );
+                        // console.log(
+                        //     'Found a predicate for: ',
+                        //     r.name,
+                        //     shouldRun,
+                        //     predicateAnimation[0]
+                        // );
 
                         if (shouldRun) {
                             const newCtx = predicateAnimation[1](ctx);
@@ -224,23 +176,34 @@ export const createRouterComponents = (
                 );
             };
 
-            // console.log('isAnimating', r.name, animationCtx);
-
-            console.log('id', id);
-            // children ? children({id}) : null;
-            // return <>{children && children(animationCtx)}</>;
             const refCallback = (node: HTMLDivElement): void => {
-                console.log('THIS IS MY NODE', node);
-                animate(node);
+                // console.log('THIS IS MY NODE', node);
+                const {ctx: animationCtx, hasRun} = animate(node);
+                if (hasRun) {
+                    setAnimationLifecycle('running');
+                }
+
+                if (animationCtx.finish.length > 0) {
+                    Promise.all(animationCtx.finish).then(() => {
+                        setAnimationLifecycle('finished');
+                    });
+                } else {
+                    setAnimationLifecycle('finished');
+                }
             };
 
-            // return React.forwardRef(children);
-            return children ? React.cloneElement(children as any, {ref: refCallback, id}) : null;
-            // return (
-            //     <HandleVisiblity ctx={animationCtx} actionCount={r.state.actionCount || 0}>
-            //         {children}
-            //     </HandleVisiblity>
-            // );
+            console.log('-- ANIMATION LIFECYCLE: ', animationLifecycle);
+
+            const realChildren = children
+                ? React.cloneElement(children as any, {ref: refCallback, id})
+                : null;
+            if (unMountOnShow && animationLifecycle === 'finished' && r.state.visible) {
+                return null;
+            } else if (unMountOnHide && animationLifecycle === 'finished' && !r.state.visible) {
+                return null;
+            } else {
+                return realChildren;
+            }
         };
         const updated = Object.assign(component, {Link, Animate});
         return {...acc, [routerName]: updated};
