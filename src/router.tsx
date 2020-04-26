@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useLayoutEffect} from 'react';
 import {useId} from 'react-id-generator';
 
 import {Manager, IRouterDeclaration, RouterInstance} from 'router-primitives';
@@ -90,6 +90,11 @@ const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function 
 });
 export {Animateable};
 
+export interface AnimationControl {
+    finished?: Promise<any>;
+    pause?: (...args: any[]) => any;
+}
+
 export const createRouterComponents = (
     routers: typeof manager['routers']
 ): Record<string, RouterT> => {
@@ -124,26 +129,33 @@ export const createRouterComponents = (
             unMountOnHide,
             unMountOnShow
         }) => {
-            const [_state, setState] = useState(r.state);
+            const [routerState, setRouterState] = useState(r.state);
+            const [ref, setRef] = useState<HTMLElement | null>();
+            const [animationControl, setAnimationControl] = useState<AnimationControl>({
+                finished: Promise.resolve(null)
+                // pause: () => {}
+            });
             const [animationLifecycle, setAnimationLifecycle] = useState<
                 'initalizing' | 'running' | 'finished'
             >('initalizing');
 
+            /**
+             * Subscribe to router state changes
+             */
             useEffect(() => {
                 if (r && r.subscribe) {
-                    setState(r.state);
-                    setAnimationLifecycle('initalizing');
-                    r.subscribe(all => setState(all.current) as any);
+                    // setRouterState(r.state);
+                    // setAnimationLifecycle('initalizing');
+                    r.subscribe(all => setRouterState(all.current) as any);
                 }
                 return;
             }, ['startup']);
-
-            const [id] = useId();
 
             const animate = (node: HTMLElement) => {
                 // console.log(`-----node: `, r.name, node);
                 return (when || []).reduce(
                     (acc, predicateAnimation) => {
+                        console.log('checking predicateAnimations');
                         const {hasRun, ctx} = acc;
                         if (hasRun) {
                             return acc;
@@ -151,6 +163,7 @@ export const createRouterComponents = (
                         const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
                             return accc && predicate(r as any);
                         }, true);
+                        console.log('shouldRun', shouldRun);
 
                         // console.log(
                         //     'Found a predicate for: ',
@@ -160,6 +173,7 @@ export const createRouterComponents = (
                         // );
 
                         if (shouldRun) {
+                            console.log('Found predicate animation to run');
                             const newCtx = predicateAnimation[1](ctx);
                             if (newCtx) {
                                 return {hasRun: true, ctx: newCtx};
@@ -176,39 +190,105 @@ export const createRouterComponents = (
                 );
             };
 
-            const refCallback = (node: HTMLDivElement): void => {
-                console.log('refCallback triggered', r.name, node);
-                // console.log('THIS IS MY NODE', node);
-                if (!node) {
-                    console.log('refCallback no node found', r.name);
+            useEffect(() => {
+                console.log('Updated action count', routerState.actionCount);
+            }, [routerState.actionCount]);
 
-                    // setAnimationLifecycle('finished');
+            useEffect(() => {
+                console.log('Updated ref', ref);
+                if (!ref) {
+                    // setAnimationLifecycle('initalizing');
+                }
+            }, [ref]);
+
+            /**
+             * Run animations whenever there is a state change
+             */
+            useEffect(() => {
+                // console.log('Action count or ref updated', r.name, ref);
+                if (ref != null) {
+                    // animate(ref);
+                    console.log('Running animation');
+                    const {ctx: animationCtx, hasRun} = animate(ref);
+                    // console.log('refCallback hasRun', r.name, hasRun);
+                    if (hasRun) {
+                        setAnimationLifecycle('running');
+                    }
+                    if (animationCtx.finish.length > 0) {
+                        Promise.all(animationCtx.finish).then(() => {
+                            setAnimationLifecycle('finished');
+                        });
+                    } else {
+                        setAnimationLifecycle('finished');
+                    }
+                } else {
+                    console.log('Skipping running of animation b/c ref missing');
+                    if (animationControl.pause) {
+                        animationControl.pause();
+                    }
+                    if (animationLifecycle !== 'initalizing') {
+                        console.log('Setting Animation lifecycle to: initalizing');
+                        // setAnimationLifecycle('initalizing');
+                    }
+                }
+            }, [routerState.actionCount, ref]);
+
+            useEffect(() => {
+                console.log('Updated animationLifecycle', animationLifecycle);
+            }, [animationLifecycle]);
+            const [id] = useId();
+
+            // const refCallback = (node: HTMLDivElement): void => {
+            //     console.log('refCallback triggered', r.name, node);
+            //     // console.log('THIS IS MY NODE', node);
+            //     if (!node) {
+            //         console.log('refCallback no node found', r.name);
+
+            //         // setAnimationLifecycle('finished');
+            //         return;
+            //     }
+            //     const {ctx: animationCtx, hasRun} = animate(node);
+            //     console.log('refCallback hasRun', r.name, hasRun);
+
+            //     // if (hasRun) {
+            //     //     setAnimationLifecycle('running');
+            //     // }
+
+            //     // if (animationCtx.finish.length > 0) {
+            //     //     Promise.all(animationCtx.finish).then(() => {
+            //     //         setAnimationLifecycle('finished');
+            //     //     });
+            //     // } else {
+            //     //     setAnimationLifecycle('finished');
+            //     // }
+            // };
+
+            // console.log('-- ANIMATION LIFECYCLE: ', r.name, animationLifecycle);
+
+            if (ref == null && routerState.visible === false) {
+                return null;
+            }
+
+            const setRefTest = (ref: HTMLElement) => {
+                // console.log(r.name, 'SETTING REF TO:', ref);
+                // TODO: for some reason null is returned whenever this component rerenders.
+                // Possibly due to the cloneElement behavior.
+                // This prevents knowing about child unmount events, which isn't a big deal
+                // if using the Animateable component.
+                // However, if run in uncontrolled mode, this could be a problem.
+                if (ref == null) {
                     return;
                 }
-                const {ctx: animationCtx, hasRun} = animate(node);
-                console.log('refCallback hasRun', r.name, hasRun);
-
-                // if (hasRun) {
-                //     setAnimationLifecycle('running');
-                // }
-
-                // if (animationCtx.finish.length > 0) {
-                //     Promise.all(animationCtx.finish).then(() => {
-                //         setAnimationLifecycle('finished');
-                //     });
-                // } else {
-                //     setAnimationLifecycle('finished');
-                // }
+                setRef(ref);
             };
-
-            console.log('-- ANIMATION LIFECYCLE: ', r.name, animationLifecycle);
-
             const realChildren = children
-                ? React.cloneElement(children as any, {ref: refCallback, id})
+                ? React.cloneElement(children as any, {ref: setRefTest, id})
                 : null;
             if (unMountOnShow && animationLifecycle === 'finished' && r.state.visible) {
+                console.log('Unmounting children');
                 return null;
             } else if (unMountOnHide && animationLifecycle === 'finished' && !r.state.visible) {
+                console.log('Unmounting children');
                 return null;
             } else {
                 return realChildren;

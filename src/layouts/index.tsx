@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import {ExampleFeature} from '../features';
 import {routerComponents, AnimationCtx, Animateable} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
@@ -25,12 +24,14 @@ const Button = styled.div`
 `;
 
 const AnimateableMoon = styled(Animateable)`
+    position: absolute;
+
     width: 200;
     background-color: blue;
 `;
 
 const AnimateableSun = styled.div`
-    // position: absolute;
+    position: absolute;
     height: 100;
     width: 200;
     background-color: yellow;
@@ -42,7 +43,7 @@ const animateJustShown = (ctx: AnimationCtx): void => {
     const animation = anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 200],
-        opacity: [0, 100],
+        opacity: [0, 1],
         scale: [0, 1]
     });
     ctx.finish.push(animation.finished);
@@ -53,7 +54,7 @@ const animateJustHidden = (ctx: AnimationCtx): void => {
     const animation = anime({
         targets: `#${ctx.node.id}`,
         translateX: [200, 400],
-        opacity: [100, 0],
+        opacity: [1, 0],
         scale: [1, 0.8],
         easing: 'linear',
         duration: 300
@@ -61,7 +62,7 @@ const animateJustHidden = (ctx: AnimationCtx): void => {
     ctx.finish.push(animation.finished);
 };
 
-const {isJustHidden, isJustShown} = statePredicates;
+const {isJustHidden, isVisible} = statePredicates;
 
 const Root = (): JSX.Element => {
     return (
@@ -69,7 +70,7 @@ const Root = (): JSX.Element => {
             <MoonScene.Animate
                 unMountOnHide
                 when={[
-                    [[isJustShown as any], animateJustShown],
+                    [[isVisible as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
@@ -83,23 +84,23 @@ const Root = (): JSX.Element => {
                     </SunScene.Link>
                 </AnimateableMoon>
             </MoonScene.Animate>
-            {/* <SunScene.Animate
+            <SunScene.Animate
                 unMountOnHide
                 when={[
-                    [[isJustShown as any], animateJustShown],
+                    [[isVisible as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
                 <AnimateableSun>
                     {'sun'}
-                    <MoonScene.Link action={'show'}>
-                        <Button>{'Show Moon'}</Button>
-                    </MoonScene.Link>
                     <SunScene.Link action={'hide'}>
                         <Button>{'Hide Sun'}</Button>
                     </SunScene.Link>
+                    <MoonScene.Link action={'show'}>
+                        <Button>{'Show Moon'}</Button>
+                    </MoonScene.Link>
                 </AnimateableSun>
-            </SunScene.Animate> */}
+            </SunScene.Animate>
             {'main'}
             <MoonScene.Link action={'show'}>
                 <Button>{'Show Moon'}</Button>
