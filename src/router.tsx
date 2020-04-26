@@ -1,17 +1,36 @@
-import React, {useState, useCallback, useEffect, useLayoutEffect} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {useId} from 'react-id-generator';
 
-import {Manager, IRouterDeclaration, RouterInstance} from 'router-primitives';
+import {
+    Manager,
+    IRouterDeclaration,
+    RouterInstance,
+    IManager,
+    IRouterTemplates,
+    IOutputLocation
+} from 'router-primitives';
+
+const moonFeatures = [{name: 'rocket'}];
+const sunFeatures = [{name: 'river', defaultAction: ['show']}];
 
 const routerDeclaration: IRouterDeclaration<any> = {
     name: 'root',
     children: {
-        scene: [{name: 'sun'}, {name: 'moon', defaultAction: ['show']}],
-        feature: [{name: 'trees'}, {name: 'mountains'}, {name: 'river'}]
+        scene: [
+            {name: 'sun', children: {feature: sunFeatures}},
+            {name: 'moon', defaultAction: ['show'], children: {feature: moonFeatures}}
+        ],
+        feature: [{name: 'trees'}, {name: 'mountains'}]
     }
 };
 
-const manager = new Manager({routerDeclaration});
+let manager: Manager<IRouterTemplates<unknown>>;
+
+try {
+    manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unknown>>;
+} catch (e) {
+    console.log(e);
+}
 
 export const useForceUpdate = (): (() => void) => {
     const [, setTick] = useState(0);
@@ -114,6 +133,19 @@ export const createRouterComponents = (
         };
         // eslint-disable-next-line
         const Link: React.FC<LinkProps> = ({children, action}) => {
+            /**
+             * Subscribe to all state changes
+             */
+            const [_, setRouterState] = useState<IOutputLocation>();
+            useEffect(() => {
+                if (r.manager.serializedStateStore) {
+                    r.manager.serializedStateStore.subscribeToStateChanges(all =>
+                        setRouterState(all)
+                    );
+                }
+                return;
+            }, ['startup']);
+
             const link = r.link(action);
             return (
                 <a href={undefined} title={link}>

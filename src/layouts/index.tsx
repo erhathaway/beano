@@ -12,6 +12,8 @@ const RootLayoutContainer = styled.div`
 `;
 
 const MoonScene = routerComponents['moon'];
+const RocketFeature = routerComponents['rocket'];
+
 const SunScene = routerComponents['sun'];
 
 const Button = styled.div`
@@ -24,10 +26,18 @@ const Button = styled.div`
 `;
 
 const AnimateableMoon = styled(Animateable)`
+    position: relative;
+    display: flex;
+    height: 200px
+    // width: 200px;
+    background-color: blue;
+`;
+
+const AnimateableRocket = styled(Animateable)`
     position: absolute;
 
     width: 200;
-    background-color: blue;
+    background-color: green;
 `;
 
 const AnimateableSun = styled.div`
@@ -62,7 +72,34 @@ const animateJustHidden = (ctx: AnimationCtx): void => {
     ctx.finish.push(animation.finished);
 };
 
-const {isJustHidden, isVisible} = statePredicates;
+const animateRocketJustShown = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        translateX: [0, 100],
+
+        // opacity: [0, 1],
+        // scale: [0, 1],
+        duration: 800
+    });
+    ctx.finish.push(animation.finished);
+};
+
+const animateRocketJustHidden = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        // translateX: [200, 400],
+        opacity: [1, 0],
+        scale: [1, 0.8],
+        easing: 'linear',
+        duration: 300
+    });
+    ctx.finish.push(animation.finished);
+};
+
+const {isJustHidden, isJustShown} = statePredicates;
 
 const Root = (): JSX.Element => {
     return (
@@ -70,7 +107,7 @@ const Root = (): JSX.Element => {
             <MoonScene.Animate
                 unMountOnHide
                 when={[
-                    [[isVisible as any], animateJustShown],
+                    [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
@@ -82,12 +119,29 @@ const Root = (): JSX.Element => {
                     <SunScene.Link action={'show'}>
                         <Button>{'Show Sun'}</Button>
                     </SunScene.Link>
+                    <RocketFeature.Link action={'show'}>
+                        <Button>{'Show rocket'}</Button>
+                    </RocketFeature.Link>
+                    <RocketFeature.Animate
+                        unMountOnHide
+                        when={[
+                            [[isJustShown as any], animateRocketJustShown],
+                            [[isJustHidden as any], animateRocketJustHidden]
+                        ]}
+                    >
+                        <AnimateableRocket>
+                            {'rocket'}
+                            <RocketFeature.Link action={'hide'}>
+                                <Button id="123">{'Hide rocket'}</Button>
+                            </RocketFeature.Link>
+                        </AnimateableRocket>
+                    </RocketFeature.Animate>
                 </AnimateableMoon>
             </MoonScene.Animate>
             <SunScene.Animate
                 unMountOnHide
                 when={[
-                    [[isVisible as any], animateJustShown],
+                    [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
                 ]}
             >
