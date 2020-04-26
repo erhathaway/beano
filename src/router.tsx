@@ -63,6 +63,10 @@ interface AnimateProps {
     children?: any;
     unMountOnHide?: boolean;
     unMountOnShow?: boolean;
+
+    animationBinding?: AnimationBinding;
+    waitForParentToStart?: boolean;
+    waitForParentToFinish?: boolean;
     // children?: React.ForwardRefExoticComponent<
     //     AnimateableProps & React.RefAttributes<HTMLDivElement>
     // >;
@@ -83,6 +87,13 @@ interface AnimateProps {
 //     }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
 // }
 
+type AnimationState = 'initalizing' | 'running' | 'finished';
+
+type AnimationBinding = {
+    notifyParentOfState: (state: AnimationState) => void;
+    parentState: AnimationState;
+};
+
 type RouterT = React.FC<Props> & {
     Link: React.FC<LinkProps>;
     Animate: React.FC<AnimateProps>;
@@ -91,7 +102,8 @@ type RouterT = React.FC<Props> & {
 interface AnimateableProps {
     id?: string;
     className?: string;
-    children?: any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
+    animationBinding?: AnimationBinding;
+    children?: (animationBinding: AnimationBinding) => any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
 }
 
 const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function animateable(
@@ -103,7 +115,7 @@ const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function 
     }
     return (
         <div id={props.id} ref={ref} className={props.className}>
-            {props.children}
+            {props.children(props.animationBinding)}
         </div>
     );
 });
@@ -159,17 +171,24 @@ export const createRouterComponents = (
             when,
             children,
             unMountOnHide,
-            unMountOnShow
+            unMountOnShow,
+            waitForParentToStart,
+            waitForParentToFinish,
+            animationBinding
         }) => {
             const [routerState, setRouterState] = useState(r.state);
+            const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
+            const [childAnimationState, setChildAnimationState] = useState<AnimationState>(
+                undefined
+            );
             const [ref, setRef] = useState<HTMLElement | null>();
             const [animationControl, setAnimationControl] = useState<AnimationControl>({
                 finished: Promise.resolve(null)
                 // pause: () => {}
             });
-            const [animationLifecycle, setAnimationLifecycle] = useState<
-                'initalizing' | 'running' | 'finished'
-            >('initalizing');
+            const [animationLifecycle, setAnimationLifecycle] = useState<AnimationState>(
+                'initalizing'
+            );
 
             /**
              * Subscribe to router state changes
@@ -187,7 +206,7 @@ export const createRouterComponents = (
                 // console.log(`-----node: `, r.name, node);
                 return (when || []).reduce(
                     (acc, predicateAnimation) => {
-                        console.log('checking predicateAnimations');
+                        // console.log('checking predicateAnimations');
                         const {hasRun, ctx} = acc;
                         if (hasRun) {
                             return acc;
@@ -195,7 +214,7 @@ export const createRouterComponents = (
                         const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
                             return accc && predicate(r as any);
                         }, true);
-                        console.log('shouldRun', shouldRun);
+                        // console.log('shouldRun', shouldRun);
 
                         // console.log(
                         //     'Found a predicate for: ',
@@ -205,7 +224,7 @@ export const createRouterComponents = (
                         // );
 
                         if (shouldRun) {
-                            console.log('Found predicate animation to run');
+                            // console.log('Found predicate animation to run');
                             const newCtx = predicateAnimation[1](ctx);
                             if (newCtx) {
                                 return {hasRun: true, ctx: newCtx};
@@ -223,50 +242,80 @@ export const createRouterComponents = (
             };
 
             useEffect(() => {
-                console.log('Updated action count', routerState.actionCount);
+                setHasRunForCycle(false);
+                console.log(r.name, ': ', 'Updated action count', routerState.actionCount);
             }, [routerState.actionCount]);
 
             useEffect(() => {
-                console.log('Updated ref', ref);
+                console.log(r.name, ': ', 'Updated ref', ref);
                 if (!ref) {
                     // setAnimationLifecycle('initalizing');
                 }
             }, [ref]);
 
+            const parentState = (animationBinding && animationBinding.parentState) || 'inializing';
+
+            useEffect(() => {
+                console.log(r.name, ': ', 'Updated parentState', parentState);
+            }, [parentState]);
             /**
              * Run animations whenever there is a state change
              */
             useEffect(() => {
                 // console.log('Action count or ref updated', r.name, ref);
-                if (ref != null) {
-                    // animate(ref);
-                    console.log('Running animation');
-                    const {ctx: animationCtx, hasRun} = animate(ref);
-                    // console.log('refCallback hasRun', r.name, hasRun);
-                    if (hasRun) {
-                        setAnimationLifecycle('running');
-                    }
-                    if (animationCtx.finish.length > 0) {
-                        Promise.all(animationCtx.finish).then(() => {
-                            setAnimationLifecycle('finished');
-                        });
-                    } else {
-                        setAnimationLifecycle('finished');
-                    }
-                } else {
-                    console.log('Skipping running of animation b/c ref missing');
+                if (ref == null) {
+                    console.log(r.name, ': ', 'Skipping running of animation b/c ref missing');
                     if (animationControl.pause) {
                         animationControl.pause();
                     }
                     if (animationLifecycle !== 'initalizing') {
-                        console.log('Setting Animation lifecycle to: initalizing');
+                        console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
                         // setAnimationLifecycle('initalizing');
                     }
+                    return;
                 }
-            }, [routerState.actionCount, ref]);
+                if (
+                    waitForParentToStart &&
+                    parentState !== 'running' &&
+                    parentState !== 'finished'
+                ) {
+                    console.log(r.name, ': ', 'Waiting for parent to finish');
+
+                    return;
+                }
+
+                // if (waitForParentToStart && parentState === 'finished') {
+                //     return;
+                // }
+
+                if (waitForParentToFinish && parentState !== 'finished') {
+                    console.log(r.name, ': ', 'Waiting for parent to finish');
+                    return;
+                }
+
+                // animate(ref);
+                console.log(r.name, ': ', 'Running animation');
+                if (hasRunForCycle === true) {
+                    return;
+                }
+
+                setHasRunForCycle(true);
+                const {ctx: animationCtx, hasRun} = animate(ref);
+                // console.log('refCallback hasRun', r.name, hasRun);
+                if (hasRun) {
+                    setAnimationLifecycle('running');
+                }
+                if (animationCtx.finish.length > 0) {
+                    Promise.all(animationCtx.finish).then(() => {
+                        setAnimationLifecycle('finished');
+                    });
+                } else {
+                    setAnimationLifecycle('finished');
+                }
+            }, [routerState.actionCount, ref, parentState, hasRunForCycle]);
 
             useEffect(() => {
-                console.log('Updated animationLifecycle', animationLifecycle);
+                console.log(r.name, ': ', 'Updated animationLifecycle', animationLifecycle);
             }, [animationLifecycle]);
             const [id] = useId();
 
@@ -314,8 +363,23 @@ export const createRouterComponents = (
                 setRef(ref);
             };
             const realChildren = children
-                ? React.cloneElement(children as any, {ref: setRefTest, id})
+                ? React.cloneElement(children as any, {
+                      ref: setRefTest,
+                      id,
+                      animationBinding: {
+                          notifyParentOfState: setChildAnimationState,
+                          parentState: animationLifecycle
+                      }
+                  })
                 : null;
+            if (waitForParentToStart && parentState !== 'running' && parentState !== 'finished') {
+                console.log(r.name, ': ', 'Waiting for parent');
+                return null;
+            }
+            if (waitForParentToFinish && parentState !== 'finished') {
+                console.log(r.name, ': ', 'Waiting for parent');
+                return null;
+            }
             if (unMountOnShow && animationLifecycle === 'finished' && r.state.visible) {
                 console.log('Unmounting children');
                 return null;

@@ -54,7 +54,8 @@ const animateJustShown = (ctx: AnimationCtx): void => {
         targets: `#${ctx.node.id}`,
         translateX: [0, 200],
         opacity: [0, 1],
-        scale: [0, 1]
+        scale: [0, 1],
+        duration: 5000
     });
     ctx.finish.push(animation.finished);
 };
@@ -81,7 +82,8 @@ const animateRocketJustShown = (ctx: AnimationCtx): void => {
 
         // opacity: [0, 1],
         // scale: [0, 1],
-        duration: 800
+        duration: 8000
+        // delay: 500
     });
     ctx.finish.push(animation.finished);
 };
@@ -112,30 +114,40 @@ const Root = (): JSX.Element => {
                 ]}
             >
                 <AnimateableMoon>
-                    {'moon'}
-                    <MoonScene.Link action={'hide'}>
-                        <Button id="123">{'Hide moon'}</Button>
-                    </MoonScene.Link>
-                    <SunScene.Link action={'show'}>
-                        <Button>{'Show Sun'}</Button>
-                    </SunScene.Link>
-                    <RocketFeature.Link action={'show'}>
-                        <Button>{'Show rocket'}</Button>
-                    </RocketFeature.Link>
-                    <RocketFeature.Animate
-                        unMountOnHide
-                        when={[
-                            [[isJustShown as any], animateRocketJustShown],
-                            [[isJustHidden as any], animateRocketJustHidden]
-                        ]}
-                    >
-                        <AnimateableRocket>
-                            {'rocket'}
-                            <RocketFeature.Link action={'hide'}>
-                                <Button id="123">{'Hide rocket'}</Button>
+                    {animationBinding => (
+                        <>
+                            {'moon'}
+                            <MoonScene.Link action={'hide'}>
+                                <Button id="123">{'Hide moon'}</Button>
+                            </MoonScene.Link>
+                            <SunScene.Link action={'show'}>
+                                <Button>{'Show Sun'}</Button>
+                            </SunScene.Link>
+                            <RocketFeature.Link action={'show'}>
+                                <Button>{'Show rocket'}</Button>
                             </RocketFeature.Link>
-                        </AnimateableRocket>
-                    </RocketFeature.Animate>
+                            <RocketFeature.Animate
+                                waitForParentToStart
+                                animationBinding={animationBinding}
+                                unMountOnHide
+                                when={[
+                                    [[isJustShown as any], animateRocketJustShown],
+                                    [[isJustHidden as any], animateRocketJustHidden]
+                                ]}
+                            >
+                                <AnimateableRocket>
+                                    {() => (
+                                        <>
+                                            {'rocket'}
+                                            <RocketFeature.Link action={'hide'}>
+                                                <Button id="123">{'Hide rocket'}</Button>
+                                            </RocketFeature.Link>
+                                        </>
+                                    )}
+                                </AnimateableRocket>
+                            </RocketFeature.Animate>
+                        </>
+                    )}
                 </AnimateableMoon>
             </MoonScene.Animate>
             <SunScene.Animate
