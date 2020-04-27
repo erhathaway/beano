@@ -55,22 +55,28 @@ const animateJustShown = (ctx: AnimationCtx): void => {
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
-        duration: 5000
+        duration: 500
     });
     ctx.finish.push(animation.finished);
 };
 
 const animateJustHidden = (ctx: AnimationCtx): void => {
     console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    const animation = anime({
-        targets: `#${ctx.node.id}`,
-        translateX: [200, 400],
-        opacity: [1, 0],
-        scale: [1, 0.8],
-        easing: 'linear',
-        duration: 300
-    });
-    ctx.finish.push(animation.finished);
+    // const animation = anime({
+    //     targets: `#${ctx.node.id}`,
+    //     translateX: [0, 200],
+    //     opacity: [0, 1],
+    //     scale: [0, 1]
+    //     // duration: 500
+    //     // translateX: [200, 400],
+    //     // translateY: [0, 500],
+    //     // opacity: [1, 0],
+    //     // scale: [1, 0.2],
+    //     // easing: 'linear',
+    //     // duration: 3000
+    //     // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
+    // });
+    // ctx.finish.push(animation.finished);
 };
 
 const animateRocketJustShown = (ctx: AnimationCtx): void => {
@@ -82,7 +88,7 @@ const animateRocketJustShown = (ctx: AnimationCtx): void => {
 
         // opacity: [0, 1],
         // scale: [0, 1],
-        duration: 8000
+        duration: 5000
         // delay: 500
     });
     ctx.finish.push(animation.finished);

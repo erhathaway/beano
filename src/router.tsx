@@ -182,6 +182,11 @@ export const createRouterComponents = (
                 undefined
             );
             const [ref, setRef] = useState<HTMLElement | null>();
+
+            const refId = ref ? ref.id : undefined;
+
+            console.log(r.name, ': ', 'START--------------------ref', refId);
+
             const [animationControl, setAnimationControl] = useState<AnimationControl>({
                 finished: Promise.resolve(null)
                 // pause: () => {}
@@ -197,7 +202,12 @@ export const createRouterComponents = (
                 if (r && r.subscribe) {
                     // setRouterState(r.state);
                     // setAnimationLifecycle('initalizing');
-                    r.subscribe(all => setRouterState(all.current) as any);
+                    r.subscribe(all => {
+                        setAnimationLifecycle('initalizing');
+                        setHasRunForCycle(false);
+
+                        setRouterState(all.current) as any;
+                    });
                 }
                 return;
             }, ['startup']);
@@ -242,18 +252,21 @@ export const createRouterComponents = (
             };
 
             useEffect(() => {
-                setHasRunForCycle(false);
+                // setAnimationLifecycle('initalizing');
+                // setHasRunForCycle(false);
                 console.log(r.name, ': ', 'Updated action count', routerState.actionCount);
             }, [routerState.actionCount]);
 
             useEffect(() => {
-                console.log(r.name, ': ', 'Updated ref', ref);
-                if (!ref) {
+                console.log(r.name, ': ', 'Updated ref', refId);
+                if (!refId) {
+                    console.log(r.name, ': ', 'Updated to no ref', refId);
+
                     // setAnimationLifecycle('initalizing');
                 }
-            }, [ref]);
+            }, [refId]);
 
-            const parentState = (animationBinding && animationBinding.parentState) || 'inializing';
+            const parentState = (animationBinding && animationBinding.parentState) || 'initalizing';
 
             useEffect(() => {
                 console.log(r.name, ': ', 'Updated parentState', parentState);
@@ -264,14 +277,17 @@ export const createRouterComponents = (
             useEffect(() => {
                 // console.log('Action count or ref updated', r.name, ref);
                 if (ref == null) {
-                    console.log(r.name, ': ', 'Skipping running of animation b/c ref missing');
                     if (animationControl.pause) {
+                        console.log(r.name, ': ', 'Pausing animation');
+
                         animationControl.pause();
                     }
                     if (animationLifecycle !== 'initalizing') {
                         console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
                         // setAnimationLifecycle('initalizing');
                     }
+                    console.log(r.name, ': ', 'Skipping running of animation b/c ref missing');
+
                     return;
                 }
                 if (
@@ -294,25 +310,34 @@ export const createRouterComponents = (
                 }
 
                 // animate(ref);
-                console.log(r.name, ': ', 'Running animation');
                 if (hasRunForCycle === true) {
+                    console.log(r.name, ': ', 'Has already run for cycle. Not running animation');
+
                     return;
                 }
+                console.log(r.name, ': ', 'Running animation');
 
                 setHasRunForCycle(true);
                 const {ctx: animationCtx, hasRun} = animate(ref);
+                console.log(r.name, ': ', 'Animation running with', hasRun, animationCtx);
                 // console.log('refCallback hasRun', r.name, hasRun);
                 if (hasRun) {
                     setAnimationLifecycle('running');
                 }
                 if (animationCtx.finish.length > 0) {
                     Promise.all(animationCtx.finish).then(() => {
+                        console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
                         setAnimationLifecycle('finished');
                     });
                 } else {
+                    console.log(
+                        r.name,
+                        ': ',
+                        'No finish promises found. Setting state to finished'
+                    );
                     setAnimationLifecycle('finished');
                 }
-            }, [routerState.actionCount, ref, parentState, hasRunForCycle]);
+            }, [routerState.actionCount, refId, parentState, hasRunForCycle]);
 
             useEffect(() => {
                 console.log(r.name, ': ', 'Updated animationLifecycle', animationLifecycle);
@@ -346,9 +371,9 @@ export const createRouterComponents = (
 
             // console.log('-- ANIMATION LIFECYCLE: ', r.name, animationLifecycle);
 
-            if (ref == null && routerState.visible === false) {
-                return null;
-            }
+            // if (ref == null && routerState.visible === false) {
+            //     return null;
+            // }
 
             const setRefTest = (ref: HTMLElement) => {
                 // console.log(r.name, 'SETTING REF TO:', ref);
@@ -372,6 +397,7 @@ export const createRouterComponents = (
                       }
                   })
                 : null;
+
             if (waitForParentToStart && parentState !== 'running' && parentState !== 'finished') {
                 console.log(r.name, ': ', 'Waiting for parent');
                 return null;
@@ -381,12 +407,13 @@ export const createRouterComponents = (
                 return null;
             }
             if (unMountOnShow && animationLifecycle === 'finished' && r.state.visible) {
-                console.log('Unmounting children');
+                console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
             } else if (unMountOnHide && animationLifecycle === 'finished' && !r.state.visible) {
-                console.log('Unmounting children');
+                console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
             } else {
+                console.log(r.name, ': ', 'Showing children');
                 return realChildren;
             }
         };
