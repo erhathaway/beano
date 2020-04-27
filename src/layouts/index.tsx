@@ -62,21 +62,36 @@ const animateJustShown = (ctx: AnimationCtx): void => {
 
 const animateJustHidden = (ctx: AnimationCtx): void => {
     console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    // const animation = anime({
-    //     targets: `#${ctx.node.id}`,
-    //     translateX: [0, 200],
-    //     opacity: [0, 1],
-    //     scale: [0, 1]
-    //     // duration: 500
-    //     // translateX: [200, 400],
-    //     // translateY: [0, 500],
-    //     // opacity: [1, 0],
-    //     // scale: [1, 0.2],
-    //     // easing: 'linear',
-    //     // duration: 3000
-    //     // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
-    // });
-    // ctx.finish.push(animation.finished);
+    let changeBegan = 0;
+    let changeCompleted = 0;
+
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        // translateX: [0, 200],
+        // opacity: [0, 1],
+        // scale: [0, 1]
+        // duration: 500
+        translateX: [200, 400],
+        translateY: [0, 500],
+        opacity: [1, 0],
+        scale: [1, 0.2],
+        easing: 'linear',
+        duration: 3000,
+        // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
+        update: function(anim) {
+            changeBegan++;
+            console.log('%%%%%% change began : ' + changeBegan);
+        },
+        changeBegin: function(anim) {
+            changeCompleted++;
+            console.log('change completed : ' + changeCompleted);
+        }
+    });
+    // setTimeout(() => {
+    //     // animation.pause();
+    //     anime.remove(`#${ctx.node.id}`);
+    // }, 500);
+    ctx.finish.push(animation.finished);
 };
 
 const animateRocketJustShown = (ctx: AnimationCtx): void => {

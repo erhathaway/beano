@@ -1,5 +1,6 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useId} from 'react-id-generator';
+import anime from 'animejs';
 
 import {
     Manager,
@@ -87,7 +88,7 @@ interface AnimateProps {
 //     }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
 // }
 
-type AnimationState = 'initalizing' | 'running' | 'finished';
+type AnimationState = 'restarting' | 'initalizing' | 'running' | 'finished';
 
 type AnimationBinding = {
     notifyParentOfState: (state: AnimationState) => void;
@@ -176,6 +177,8 @@ export const createRouterComponents = (
             waitForParentToFinish,
             animationBinding
         }) => {
+            // const [shouldUnmountNode, setShouldUnmountNode] = useState<boolean>(false);
+
             const [routerState, setRouterState] = useState(r.state);
             const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
             const [childAnimationState, setChildAnimationState] = useState<AnimationState>(
@@ -191,9 +194,8 @@ export const createRouterComponents = (
                 finished: Promise.resolve(null)
                 // pause: () => {}
             });
-            const [animationLifecycle, setAnimationLifecycle] = useState<AnimationState>(
-                'initalizing'
-            );
+            const [animationLifecycle, setAnimationLifecycle] = useState<AnimationState>();
+            // 'initalizing'
 
             /**
              * Subscribe to router state changes
@@ -203,7 +205,20 @@ export const createRouterComponents = (
                     // setRouterState(r.state);
                     // setAnimationLifecycle('initalizing');
                     r.subscribe(all => {
-                        setAnimationLifecycle('initalizing');
+                        // ref && anime.remove(ref);
+                        // console.log('Lifecycle: new animation: ', animationLifecycle);
+                        // if (animationLifecycle === 'running') {
+                        setAnimationLifecycle(current => {
+                            if (current === 'running') {
+                                return 'restarting';
+                            } else {
+                                return 'initalizing';
+                            }
+                        });
+                        // } else {
+                        //     setAnimationLifecycle('initalizing');
+                        // }
+
                         setHasRunForCycle(false);
 
                         setRouterState(all.current) as any;
@@ -211,6 +226,20 @@ export const createRouterComponents = (
                 }
                 return;
             }, ['startup']);
+
+            // if (shouldUnmountNode) {
+            //     console.log(r.name, ':************ ', 'Node unmountting');
+            //     setShouldUnmountNode(false);
+            //     return null;
+            // }
+            // useEffect(() => {
+            //     console.log(r.name, ': ', 'Node unmounted');
+
+            //     setShouldUnmountNode(false);
+            //     // setAnimationLifecycle('initalizing');
+            //     // setHasRunForCycle(false);
+            //     console.log(r.name, ': ', 'Updated action count', routerState.actionCount);
+            // }, [shouldUnmountNode]);
 
             const animate = (node: HTMLElement) => {
                 // console.log(`-----node: `, r.name, node);
@@ -275,8 +304,12 @@ export const createRouterComponents = (
              * Run animations whenever there is a state change
              */
             useEffect(() => {
+                if (animationLifecycle === 'restarting') {
+                    return;
+                }
                 // console.log('Action count or ref updated', r.name, ref);
                 if (ref == null) {
+                    console.log(r.name, ': ', 'WOULD PAUSE / STOP IF COULD');
                     if (animationControl.pause) {
                         console.log(r.name, ': ', 'Pausing animation');
 
@@ -317,6 +350,10 @@ export const createRouterComponents = (
                 }
                 console.log(r.name, ': ', 'Running animation');
 
+                // if (shouldUnmountNode === false) {
+                //     setShouldUnmountNode(true);
+                //     return;
+                // }
                 setHasRunForCycle(true);
                 const {ctx: animationCtx, hasRun} = animate(ref);
                 console.log(r.name, ': ', 'Animation running with', hasRun, animationCtx);
@@ -374,6 +411,25 @@ export const createRouterComponents = (
             // if (ref == null && routerState.visible === false) {
             //     return null;
             // }
+            useEffect(() => {
+                if (animationLifecycle === 'restarting') {
+                    console.log(r.name, 'Lifecycle ohhhh maybe');
+                    setAnimationLifecycle('initalizing');
+                    // return null;
+                }
+            }, [animationLifecycle]);
+
+            if (animationLifecycle === 'restarting') {
+                console.log(r.name, 'Lifecycle ohhhh yeah');
+                // setAnimationLifecycle('initalizing');
+                return null;
+            }
+            if (ref == null && unMountOnHide && routerState.visible === false) {
+                return null;
+            }
+            if (ref == null && routerState.visible === false) {
+                return null;
+            }
 
             const setRefTest = (ref: HTMLElement) => {
                 // console.log(r.name, 'SETTING REF TO:', ref);
