@@ -1,18 +1,18 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {useId} from 'react-id-generator';
-import anime from 'animejs';
+// import anime from 'animejs';
 
 import {
     Manager,
     IRouterDeclaration,
     RouterInstance,
-    IManager,
+    // IManager,
     IRouterTemplates,
     IOutputLocation
 } from 'router-primitives';
 
 const moonFeatures = [{name: 'rocket'}];
-const sunFeatures = [{name: 'river', defaultAction: ['show']}];
+const sunFeatures = [{name: 'river', defaultAction: ['show']} as IRouterDeclaration<any>];
 
 const routerDeclaration: IRouterDeclaration<any> = {
     name: 'root',
@@ -68,6 +68,8 @@ interface AnimateProps {
     animationBinding?: AnimationBinding;
     waitForParentToStart?: boolean;
     waitForParentToFinish?: boolean;
+
+    // exitAfterChildStart?: boolean;
     // children?: React.ForwardRefExoticComponent<
     //     AnimateableProps & React.RefAttributes<HTMLDivElement>
     // >;
@@ -104,7 +106,7 @@ interface AnimateableProps {
     id?: string;
     className?: string;
     animationBinding?: AnimationBinding;
-    children?: (animationBinding: AnimationBinding) => any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
+    children?: (animationBinding: AnimationBinding | undefined) => any; //(...args: any[]) => any; //React.ReactElement | JSX.Element | React.Component; //Array<string | React.ReactElement>; // (...args: any[]) => React.ReactElement; //(ctx: AnimationCtx) => any;
 }
 
 const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function animateable(
@@ -116,7 +118,7 @@ const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function 
     }
     return (
         <div id={props.id} ref={ref} className={props.className}>
-            {props.children(props.animationBinding)}
+            {props.children && props.children(props.animationBinding)}
         </div>
     );
 });
@@ -175,15 +177,15 @@ export const createRouterComponents = (
             unMountOnShow,
             waitForParentToStart,
             waitForParentToFinish,
+            // exitAfterChildStart,
+
             animationBinding
         }) => {
             // const [shouldUnmountNode, setShouldUnmountNode] = useState<boolean>(false);
 
             const [routerState, setRouterState] = useState(r.state);
             const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
-            const [childAnimationState, setChildAnimationState] = useState<AnimationState>(
-                undefined
-            );
+            const [childAnimationState, setChildAnimationState] = useState<AnimationState>();
             const [ref, setRef] = useState<HTMLElement | null>();
 
             const refId = ref ? ref.id : undefined;
@@ -342,6 +344,15 @@ export const createRouterComponents = (
                     return;
                 }
 
+                // if (
+                //     exitAfterChildStart &&
+                //     childAnimationState !== 'running' &&
+                //     childAnimationState !== 'finished'
+                // ) {
+                //     console.log(r.name, ': ', 'Waiting for child to start');
+                //     return;
+                // }
+
                 // animate(ref);
                 if (hasRunForCycle === true) {
                     console.log(r.name, ': ', 'Has already run for cycle. Not running animation');
@@ -374,7 +385,7 @@ export const createRouterComponents = (
                     );
                     setAnimationLifecycle('finished');
                 }
-            }, [routerState.actionCount, refId, parentState, hasRunForCycle]);
+            }, [routerState.actionCount, refId, parentState, childAnimationState, hasRunForCycle]);
 
             useEffect(() => {
                 console.log(r.name, ': ', 'Updated animationLifecycle', animationLifecycle);
