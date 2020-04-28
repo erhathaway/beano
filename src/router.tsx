@@ -66,8 +66,10 @@ interface AnimateProps {
     unMountOnShow?: boolean;
 
     animationBinding?: AnimationBinding;
-    waitForParentToStart?: boolean;
-    waitForParentToFinish?: boolean;
+    enterAfterParentStart?: boolean;
+    enterAfterParentFinish?: boolean;
+    exitAfterChildStart?: boolean;
+    exitAfterChildFinish?: boolean;
 
     // exitAfterChildStart?: boolean;
     // children?: React.ForwardRefExoticComponent<
@@ -93,7 +95,7 @@ interface AnimateProps {
 type AnimationState = 'restarting' | 'initalizing' | 'running' | 'finished';
 
 type AnimationBinding = {
-    notifyParentOfState: (state: AnimationState) => void;
+    notifyParentOfState: (state: AnimationState | undefined) => void;
     parentState: AnimationState;
 };
 
@@ -175,8 +177,10 @@ export const createRouterComponents = (
             children,
             unMountOnHide,
             unMountOnShow,
-            waitForParentToStart,
-            waitForParentToFinish,
+            enterAfterParentStart,
+            enterAfterParentFinish,
+            exitAfterChildStart,
+            exitAfterChildFinish,
             // exitAfterChildStart,
 
             animationBinding
@@ -185,11 +189,12 @@ export const createRouterComponents = (
 
             const [routerState, setRouterState] = useState(r.state);
             const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
-            const [childAnimationState, setChildAnimationState] = useState<AnimationState>();
+            const [childState, setChildState] = useState<AnimationState>();
             const [ref, setRef] = useState<HTMLElement | null>();
 
             const refId = ref ? ref.id : undefined;
 
+            const visible = r.state.visible || false;
             console.log(r.name, ': ', 'START--------------------ref', refId);
 
             const [animationControl, setAnimationControl] = useState<AnimationControl>({
@@ -199,6 +204,11 @@ export const createRouterComponents = (
             const [animationLifecycle, setAnimationLifecycle] = useState<AnimationState>();
             // 'initalizing'
 
+            useEffect(() => {
+                if (animationBinding) {
+                    animationBinding.notifyParentOfState(animationLifecycle);
+                }
+            }, [animationLifecycle]);
             /**
              * Subscribe to router state changes
              */
@@ -306,6 +316,8 @@ export const createRouterComponents = (
              * Run animations whenever there is a state change
              */
             useEffect(() => {
+                console.log(r.name, ': ', 'Child state:', childState);
+
                 if (animationLifecycle === 'restarting') {
                     return;
                 }
@@ -326,28 +338,44 @@ export const createRouterComponents = (
                     return;
                 }
                 if (
-                    waitForParentToStart &&
+                    visible &&
+                    enterAfterParentStart &&
                     parentState !== 'running' &&
                     parentState !== 'finished'
                 ) {
-                    console.log(r.name, ': ', 'Waiting for parent to finish');
+                    console.log(r.name, ': ', 'Waiting for parent to start');
 
                     return;
                 }
 
-                // if (waitForParentToStart && parentState === 'finished') {
+                if (
+                    !visible &&
+                    exitAfterChildStart &&
+                    childState !== 'running' &&
+                    childState !== 'finished'
+                ) {
+                    console.log(r.name, ': ', 'Waiting for child to start');
+                    return;
+                }
+
+                // if (enterAfterParentStart && parentState === 'finished') {
                 //     return;
                 // }
 
-                if (waitForParentToFinish && parentState !== 'finished') {
+                if (visible && enterAfterParentFinish && parentState !== 'finished') {
                     console.log(r.name, ': ', 'Waiting for parent to finish');
+                    return;
+                }
+
+                if (!visible && exitAfterChildFinish && childState !== 'finished') {
+                    console.log(r.name, ': ', 'Waiting for child to finish');
                     return;
                 }
 
                 // if (
                 //     exitAfterChildStart &&
-                //     childAnimationState !== 'running' &&
-                //     childAnimationState !== 'finished'
+                //     childState !== 'running' &&
+                //     childState !== 'finished'
                 // ) {
                 //     console.log(r.name, ': ', 'Waiting for child to start');
                 //     return;
@@ -385,7 +413,7 @@ export const createRouterComponents = (
                     );
                     setAnimationLifecycle('finished');
                 }
-            }, [routerState.actionCount, refId, parentState, childAnimationState, hasRunForCycle]);
+            }, [routerState.actionCount, refId, parentState, childState, hasRunForCycle]);
 
             useEffect(() => {
                 console.log(r.name, ': ', 'Updated animationLifecycle', animationLifecycle);
@@ -435,10 +463,10 @@ export const createRouterComponents = (
                 // setAnimationLifecycle('initalizing');
                 return null;
             }
-            if (ref == null && unMountOnHide && routerState.visible === false) {
+            if (ref == null && unMountOnHide && visible === false) {
                 return null;
             }
-            if (ref == null && routerState.visible === false) {
+            if (ref == null && visible === false) {
                 return null;
             }
 
@@ -459,24 +487,42 @@ export const createRouterComponents = (
                       ref: setRefTest,
                       id,
                       animationBinding: {
-                          notifyParentOfState: setChildAnimationState,
+                          notifyParentOfState: setChildState,
                           parentState: animationLifecycle
                       }
                   })
                 : null;
 
-            if (waitForParentToStart && parentState !== 'running' && parentState !== 'finished') {
-                console.log(r.name, ': ', 'Waiting for parent');
+            if (
+                visible &&
+                enterAfterParentStart &&
+                parentState !== 'running' &&
+                parentState !== 'finished'
+            ) {
+                console.log(r.name, ': ', 'Waiting for parent to start');
                 return null;
             }
-            if (waitForParentToFinish && parentState !== 'finished') {
-                console.log(r.name, ': ', 'Waiting for parent');
+            // if (
+            //     !visible &&
+            //     exitAfterChildStart &&
+            //     childState !== 'running' &&
+            //     childState !== 'finished'
+            // ) {
+            //     console.log(r.name, ': ', 'Waiting for child to start');
+            //     return null;
+            // }
+            if (visible && enterAfterParentFinish && parentState !== 'finished') {
+                console.log(r.name, ': ', 'Waiting for parent to finish');
                 return null;
             }
-            if (unMountOnShow && animationLifecycle === 'finished' && r.state.visible) {
+            // if (!visible && exitAfterChildFinish && childState !== 'finished') {
+            //     console.log(r.name, ': ', 'Waiting for child to finish');
+            //     return null;
+            // }
+            if (visible && unMountOnShow && animationLifecycle === 'finished') {
                 console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
-            } else if (unMountOnHide && animationLifecycle === 'finished' && !r.state.visible) {
+            } else if (!visible && unMountOnHide && animationLifecycle === 'finished') {
                 console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
             } else {

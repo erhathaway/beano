@@ -62,8 +62,8 @@ const animateJustShown = (ctx: AnimationCtx): void => {
 
 const animateJustHidden = (ctx: AnimationCtx): void => {
     console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    let changeBegan = 0;
-    let changeCompleted = 0;
+    // const changeBegan = 0;
+    // const changeCompleted = 0;
 
     const animation = anime({
         targets: `#${ctx.node.id}`,
@@ -76,16 +76,17 @@ const animateJustHidden = (ctx: AnimationCtx): void => {
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
-        duration: 3000,
+        duration: 3000
         // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
-        update: function(anim) {
-            changeBegan++;
-            console.log('%%%%%% change began : ' + changeBegan);
-        },
-        changeBegin: function(anim) {
-            changeCompleted++;
-            console.log('change completed : ' + changeCompleted);
-        }
+        // update: function(anim) {
+        //     changeBegan++;
+        //     console.log('%%%%%% change began : ' + changeBegan);
+        // },
+        // changeBegin: function(anim) {
+        //     changeCompleted++;
+        //     console.log('change completed : ' + changeCompleted);
+        // },
+        // delay: 4000
     });
     // setTimeout(() => {
     //     // animation.pause();
@@ -113,11 +114,13 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
     console.log('oh hi', '$$$$$$$$', ctx.node.id);
     const animation = anime({
         targets: `#${ctx.node.id}`,
-        // translateX: [200, 400],
+        translateX: [0, 400],
+        translateY: [0, 400],
+
         opacity: [1, 0],
-        scale: [1, 0.8],
+        scale: [1, 0.2],
         easing: 'linear',
-        duration: 300
+        duration: 3000
     });
     ctx.finish.push(animation.finished);
 };
@@ -129,6 +132,7 @@ const Root = (): JSX.Element => {
         <RootLayoutContainer>
             <MoonScene.Animate
                 unMountOnHide
+                exitAfterChildFinish
                 when={[
                     [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
@@ -148,7 +152,7 @@ const Root = (): JSX.Element => {
                                 <Button>{'Show rocket'}</Button>
                             </RocketFeature.Link>
                             <RocketFeature.Animate
-                                waitForParentToStart
+                                enterAfterParentStart
                                 animationBinding={animationBinding}
                                 unMountOnHide
                                 when={[
