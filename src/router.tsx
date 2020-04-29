@@ -195,13 +195,14 @@ export const createRouterComponents = (
             const refId = ref ? ref.id : undefined;
 
             const visible = r.state.visible || false;
-            console.log(r.name, ': ', 'START--------------------ref', refId);
 
+            // TODO enable setting of animation control
             const [animationControl, setAnimationControl] = useState<AnimationControl>({
                 finished: Promise.resolve(null)
                 // pause: () => {}
             });
             const [currentState, setCurrentState] = useState<AnimationState>();
+            console.log(r.name, ': ', 'START--------------------ref', refId, currentState);
 
             // setCurrentState((s) => {
 
@@ -210,11 +211,13 @@ export const createRouterComponents = (
 
             useEffect(() => {
                 if (animationBinding) {
+                    console.log(r.name, ': ', 'Notifying parent of state', currentState);
+
                     animationBinding.notifyParentOfState(currentState);
                 }
                 return () => {
                     if (animationBinding) {
-                        animationBinding.notifyParentOfState(undefined);
+                        animationBinding.notifyParentOfState('unmounted');
                     }
                 };
             }, [currentState]);
@@ -233,7 +236,11 @@ export const createRouterComponents = (
                             if (current === 'running') {
                                 return 'restarting';
                             } else {
-                                // return 'initalizing';
+                                if (!all.current.visible && ref === undefined) {
+                                    return 'unmounted';
+                                } else {
+                                    return 'initalizing';
+                                }
                                 // TODO keep changing the initial state away from 'iniatlizing' to 'undefined'
                                 // if the component is mounted change it to initalizing
                                 // if the component is visible and unmouunted change it to initalizing
@@ -241,7 +248,7 @@ export const createRouterComponents = (
                                 // TOOD change from undefined to 'unmounted'
                                 // unmounted -> restarting -> initalizing -> running -> finished
 
-                                return 'unmounted';
+                                // return 'unmounted';
                             }
                         });
                         // } else {
