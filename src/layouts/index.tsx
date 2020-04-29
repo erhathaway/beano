@@ -76,7 +76,7 @@ const animateJustHidden = (ctx: AnimationCtx): void => {
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
-        duration: 3000
+        duration: 5000
         // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
         // update: function(anim) {
         //     changeBegan++;
@@ -120,7 +120,7 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
-        duration: 3000
+        duration: 300
     });
     ctx.finish.push(animation.finished);
 };

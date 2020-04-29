@@ -92,7 +92,7 @@ interface AnimateProps {
 //     }) => React.ReactElement; // | JSX.Element; //(ctx: AnimationCtx) => any;
 // }
 
-type AnimationState = 'restarting' | 'initalizing' | 'running' | 'finished';
+type AnimationState = 'restarting' | 'initalizing' | 'running' | 'finished' | 'unmounted';
 
 type AnimationBinding = {
     notifyParentOfState: (state: AnimationState | undefined) => void;
@@ -201,34 +201,51 @@ export const createRouterComponents = (
                 finished: Promise.resolve(null)
                 // pause: () => {}
             });
-            const [animationLifecycle, setAnimationLifecycle] = useState<AnimationState>();
+            const [currentState, setCurrentState] = useState<AnimationState>();
+
+            // setCurrentState((s) => {
+
+            // })
             // 'initalizing'
 
             useEffect(() => {
                 if (animationBinding) {
-                    animationBinding.notifyParentOfState(animationLifecycle);
+                    animationBinding.notifyParentOfState(currentState);
                 }
-            }, [animationLifecycle]);
+                return () => {
+                    if (animationBinding) {
+                        animationBinding.notifyParentOfState(undefined);
+                    }
+                };
+            }, [currentState]);
             /**
              * Subscribe to router state changes
              */
             useEffect(() => {
                 if (r && r.subscribe) {
                     // setRouterState(r.state);
-                    // setAnimationLifecycle('initalizing');
+                    // setCurrentState('initalizing');
                     r.subscribe(all => {
                         // ref && anime.remove(ref);
-                        // console.log('Lifecycle: new animation: ', animationLifecycle);
-                        // if (animationLifecycle === 'running') {
-                        setAnimationLifecycle(current => {
+                        // console.log('Lifecycle: new animation: ', currentState);
+                        // if (currentState === 'running') {
+                        setCurrentState(current => {
                             if (current === 'running') {
                                 return 'restarting';
                             } else {
-                                return 'initalizing';
+                                // return 'initalizing';
+                                // TODO keep changing the initial state away from 'iniatlizing' to 'undefined'
+                                // if the component is mounted change it to initalizing
+                                // if the component is visible and unmouunted change it to initalizing
+                                // otherwise, keep it as undefined
+                                // TOOD change from undefined to 'unmounted'
+                                // unmounted -> restarting -> initalizing -> running -> finished
+
+                                return 'unmounted';
                             }
                         });
                         // } else {
-                        //     setAnimationLifecycle('initalizing');
+                        //     setCurrentState('initalizing');
                         // }
 
                         setHasRunForCycle(false);
@@ -248,7 +265,7 @@ export const createRouterComponents = (
             //     console.log(r.name, ': ', 'Node unmounted');
 
             //     setShouldUnmountNode(false);
-            //     // setAnimationLifecycle('initalizing');
+            //     // setCurrentState('initalizing');
             //     // setHasRunForCycle(false);
             //     console.log(r.name, ': ', 'Updated action count', routerState.actionCount);
             // }, [shouldUnmountNode]);
@@ -293,7 +310,7 @@ export const createRouterComponents = (
             };
 
             useEffect(() => {
-                // setAnimationLifecycle('initalizing');
+                // setCurrentState('initalizing');
                 // setHasRunForCycle(false);
                 console.log(r.name, ': ', 'Updated action count', routerState.actionCount);
             }, [routerState.actionCount]);
@@ -303,7 +320,7 @@ export const createRouterComponents = (
                 if (!refId) {
                     console.log(r.name, ': ', 'Updated to no ref', refId);
 
-                    // setAnimationLifecycle('initalizing');
+                    // setCurrentState('initalizing');
                 }
             }, [refId]);
 
@@ -318,7 +335,7 @@ export const createRouterComponents = (
             useEffect(() => {
                 console.log(r.name, ': ', 'Child state:', childState);
 
-                if (animationLifecycle === 'restarting') {
+                if (currentState === 'restarting') {
                     return;
                 }
                 // console.log('Action count or ref updated', r.name, ref);
@@ -329,9 +346,9 @@ export const createRouterComponents = (
 
                         animationControl.pause();
                     }
-                    if (animationLifecycle !== 'initalizing') {
+                    if (currentState !== 'initalizing') {
                         console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
-                        // setAnimationLifecycle('initalizing');
+                        // setCurrentState('initalizing');
                     }
                     console.log(r.name, ': ', 'Skipping running of animation b/c ref missing');
 
@@ -367,7 +384,12 @@ export const createRouterComponents = (
                     return;
                 }
 
-                if (!visible && exitAfterChildFinish && childState !== 'finished') {
+                if (
+                    !visible &&
+                    exitAfterChildFinish &&
+                    childState !== 'finished' &&
+                    childState !== 'unmounted' // will change to undefined if unmounted
+                ) {
                     console.log(r.name, ': ', 'Waiting for child to finish');
                     return;
                 }
@@ -398,12 +420,12 @@ export const createRouterComponents = (
                 console.log(r.name, ': ', 'Animation running with', hasRun, animationCtx);
                 // console.log('refCallback hasRun', r.name, hasRun);
                 if (hasRun) {
-                    setAnimationLifecycle('running');
+                    setCurrentState('running');
                 }
                 if (animationCtx.finish.length > 0) {
                     Promise.all(animationCtx.finish).then(() => {
                         console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
-                        setAnimationLifecycle('finished');
+                        setCurrentState('finished');
                     });
                 } else {
                     console.log(
@@ -411,13 +433,13 @@ export const createRouterComponents = (
                         ': ',
                         'No finish promises found. Setting state to finished'
                     );
-                    setAnimationLifecycle('finished');
+                    setCurrentState('finished');
                 }
             }, [routerState.actionCount, refId, parentState, childState, hasRunForCycle]);
 
             useEffect(() => {
-                console.log(r.name, ': ', 'Updated animationLifecycle', animationLifecycle);
-            }, [animationLifecycle]);
+                console.log(r.name, ': ', 'Updated currentState', currentState);
+            }, [currentState]);
             const [id] = useId();
 
             // const refCallback = (node: HTMLDivElement): void => {
@@ -426,41 +448,41 @@ export const createRouterComponents = (
             //     if (!node) {
             //         console.log('refCallback no node found', r.name);
 
-            //         // setAnimationLifecycle('finished');
+            //         // setCurrentState('finished');
             //         return;
             //     }
             //     const {ctx: animationCtx, hasRun} = animate(node);
             //     console.log('refCallback hasRun', r.name, hasRun);
 
             //     // if (hasRun) {
-            //     //     setAnimationLifecycle('running');
+            //     //     setCurrentState('running');
             //     // }
 
             //     // if (animationCtx.finish.length > 0) {
             //     //     Promise.all(animationCtx.finish).then(() => {
-            //     //         setAnimationLifecycle('finished');
+            //     //         setCurrentState('finished');
             //     //     });
             //     // } else {
-            //     //     setAnimationLifecycle('finished');
+            //     //     setCurrentState('finished');
             //     // }
             // };
 
-            // console.log('-- ANIMATION LIFECYCLE: ', r.name, animationLifecycle);
+            // console.log('-- ANIMATION LIFECYCLE: ', r.name, currentState);
 
             // if (ref == null && routerState.visible === false) {
             //     return null;
             // }
             useEffect(() => {
-                if (animationLifecycle === 'restarting') {
+                if (currentState === 'restarting') {
                     console.log(r.name, 'Lifecycle ohhhh maybe');
-                    setAnimationLifecycle('initalizing');
+                    setCurrentState('initalizing');
                     // return null;
                 }
-            }, [animationLifecycle]);
+            }, [currentState]);
 
-            if (animationLifecycle === 'restarting') {
+            if (currentState === 'restarting') {
                 console.log(r.name, 'Lifecycle ohhhh yeah');
-                // setAnimationLifecycle('initalizing');
+                // setCurrentState('initalizing');
                 return null;
             }
             if (ref == null && unMountOnHide && visible === false) {
@@ -488,7 +510,7 @@ export const createRouterComponents = (
                       id,
                       animationBinding: {
                           notifyParentOfState: setChildState,
-                          parentState: animationLifecycle
+                          parentState: currentState
                       }
                   })
                 : null;
@@ -519,10 +541,10 @@ export const createRouterComponents = (
             //     console.log(r.name, ': ', 'Waiting for child to finish');
             //     return null;
             // }
-            if (visible && unMountOnShow && animationLifecycle === 'finished') {
+            if (visible && unMountOnShow && currentState === 'finished') {
                 console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
-            } else if (!visible && unMountOnHide && animationLifecycle === 'finished') {
+            } else if (!visible && unMountOnHide && currentState === 'finished') {
                 console.log(r.name, ': ', 'Unmounting b/c finished');
                 return null;
             } else {
