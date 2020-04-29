@@ -126,10 +126,66 @@ const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function 
 });
 export {Animateable};
 
-export interface AnimationControl {
-    finished?: Promise<any>;
-    pause?: (...args: any[]) => any;
+const pendingPromise = Promise.race.bind(Promise, []);
+
+class AnimationControl {
+    // eslint-disable-next-line
+    _cancel: undefined | (() => any) = undefined;
+    // eslint-disable-next-line
+    _onFinishPromise: undefined | Promise<any> = undefined;
+    // eslint-disable-next-line
+    _onFinishAction: undefined | (() => any) = undefined;
+
+    cancel = (): void => {
+        console.log('** ATTEMPTING CANCEL', this._cancel);
+        try {
+            this._cancel && this._cancel();
+        } catch (e) {
+            console.log('**', e);
+        }
+    };
+
+    // eslint-disable-next-line
+    createOnFinishPromise = (promises: Promise<any>[] = []): Promise<any> => {
+        console.log('** CREATING ON FINISH');
+        let hasCanceled = false;
+        this._onFinishPromise = new Promise((fulfill, _reject) => {
+            this._cancel = () => {
+                // console.log(r.name, ': OHHHHHH yeah CANCELING');
+
+                fulfill(pendingPromise());
+                console.log('** FULLFILLING CANCEL');
+                hasCanceled = true;
+            };
+
+            try {
+                Promise.all(promises)
+                    .then(() => {
+                        console.log('** FULLFILLING PROMISEE!!!');
+
+                        !hasCanceled && fulfill();
+                    })
+                    .then(() => {
+                        if (this._onFinishAction && !hasCanceled) {
+                            this._onFinishAction();
+                        }
+                    });
+            } catch (e) {
+                _reject(e);
+            }
+        });
+        return this._onFinishPromise;
+    };
+
+    setOnFinishAction = (action: () => any): void => {
+        this._onFinishAction = action;
+    };
 }
+
+// export interface AnimationControl {
+//     finished?: Promise<any>;
+//     pause?: (...args: any[]) => any;
+// }
 
 export const createRouterComponents = (
     routers: typeof manager['routers']
@@ -196,13 +252,23 @@ export const createRouterComponents = (
 
             const visible = r.state.visible || false;
 
-            // TODO enable setting of animation control
-            const [animationControl, setAnimationControl] = useState<AnimationControl>({
-                finished: Promise.resolve(null)
-                // pause: () => {}
-            });
             const [currentState, setCurrentState] = useState<AnimationState>();
             console.log(r.name, ': ', 'START--------------------ref', refId, currentState);
+
+            const createAnimationControl = () => {
+                const ac = new AnimationControl();
+                ac.setOnFinishAction(() => {
+                    // console.log(r.name, ': OHHHHHH yeah resolving');
+                    // console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
+                    setCurrentState('finished');
+                });
+                return ac;
+            };
+
+            // TODO enable setting of animation control
+            const [animationControl, setAnimationControl] = useState<AnimationControl>(
+                createAnimationControl()
+            );
 
             // setCurrentState((s) => {
 
@@ -232,6 +298,12 @@ export const createRouterComponents = (
                         // ref && anime.remove(ref);
                         // console.log('Lifecycle: new animation: ', currentState);
                         // if (currentState === 'running') {
+                        setAnimationControl(c => {
+                            // c.cancel();
+                            // return c;
+                            c.cancel();
+                            return createAnimationControl();
+                        });
                         setCurrentState(current => {
                             if (current === 'running') {
                                 return 'restarting';
@@ -348,10 +420,10 @@ export const createRouterComponents = (
                 // console.log('Action count or ref updated', r.name, ref);
                 if (ref == null) {
                     console.log(r.name, ': ', 'WOULD PAUSE / STOP IF COULD');
-                    if (animationControl.pause) {
-                        console.log(r.name, ': ', 'Pausing animation');
+                    if (animationControl.cancel) {
+                        console.log(r.name, ': ', 'Canceling animation');
 
-                        animationControl.pause();
+                        animationControl.cancel();
                     }
                     if (currentState !== 'initalizing') {
                         console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
@@ -430,10 +502,11 @@ export const createRouterComponents = (
                     setCurrentState('running');
                 }
                 if (animationCtx.finish.length > 0) {
-                    Promise.all(animationCtx.finish).then(() => {
-                        console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
-                        setCurrentState('finished');
-                    });
+                    animationControl.createOnFinishPromise(animationCtx.finish);
+                    // Promise.all(animationCtx.finish).then(() => {
+                    //     console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
+                    //     setCurrentState('finished');
+                    // });
                 } else {
                     console.log(
                         r.name,
