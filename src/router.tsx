@@ -187,6 +187,8 @@ class AnimationControl {
 //     pause?: (...args: any[]) => any;
 // }
 
+export type ChildrenState = Record<string, AnimationState>;
+
 export const createRouterComponents = (
     routers: typeof manager['routers']
 ): Record<string, RouterT> => {
@@ -251,16 +253,18 @@ export const createRouterComponents = (
             const refId = ref ? ref.id : undefined;
 
             const visible = r.state.visible || false;
-
-            const [currentState, setCurrentState] = useState<AnimationState>();
-            console.log(r.name, ': ', 'START--------------------ref', refId, currentState);
+            '';
+            const [currentState, setCurrentState] = useState<AnimationState>('initalizing');
+            console.log(r.name, ': ', 'START------------ref', refId, 'currentState:', currentState);
 
             const createAnimationControl = () => {
                 const ac = new AnimationControl();
                 ac.setOnFinishAction(() => {
                     // console.log(r.name, ': OHHHHHH yeah resolving');
                     // console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
-                    setCurrentState('finished');
+                    setCurrentState(currentState =>
+                        currentState === 'running' ? 'finished' : currentState
+                    );
                 });
                 return ac;
             };
@@ -283,6 +287,8 @@ export const createRouterComponents = (
                 }
                 return () => {
                     if (animationBinding) {
+                        console.log(r.name, ': ', 'Unmounting from unmount action');
+
                         animationBinding.notifyParentOfState('unmounted');
                     }
                 };
@@ -306,11 +312,26 @@ export const createRouterComponents = (
                         });
                         setCurrentState(current => {
                             if (current === 'running') {
+                                console.log(
+                                    r.name,
+                                    ': ',
+                                    'Setting state to restarting in subscribe fn'
+                                );
                                 return 'restarting';
                             } else {
                                 if (!all.current.visible && ref === undefined) {
+                                    console.log(
+                                        r.name,
+                                        ': ',
+                                        'Setting state to unmounted in subscribe fn'
+                                    );
                                     return 'unmounted';
                                 } else {
+                                    console.log(
+                                        r.name,
+                                        ': ',
+                                        'Setting state to initializing in subscribe fn'
+                                    );
                                     return 'initalizing';
                                 }
                                 // TODO keep changing the initial state away from 'iniatlizing' to 'undefined'
@@ -601,7 +622,7 @@ export const createRouterComponents = (
                 parentState !== 'running' &&
                 parentState !== 'finished'
             ) {
-                console.log(r.name, ': ', 'Waiting for parent to start');
+                console.log(r.name, ': ', 'Waiting for parent to start before entering');
                 return null;
             }
             // if (
@@ -614,18 +635,21 @@ export const createRouterComponents = (
             //     return null;
             // }
             if (visible && enterAfterParentFinish && parentState !== 'finished') {
-                console.log(r.name, ': ', 'Waiting for parent to finish');
+                console.log(r.name, ': ', 'Waiting for parent to finish before entering');
                 return null;
             }
-            // if (!visible && exitAfterChildFinish && childState !== 'finished') {
-            //     console.log(r.name, ': ', 'Waiting for child to finish');
+
+            // if (visible && unMountOnShow && currentState === 'finished') {
+            //     console.log(r.name, ': ', 'Unmounting b/c finished');
             //     return null;
-            // }
-            if (visible && unMountOnShow && currentState === 'finished') {
-                console.log(r.name, ': ', 'Unmounting b/c finished');
-                return null;
-            } else if (!visible && unMountOnHide && currentState === 'finished') {
-                console.log(r.name, ': ', 'Unmounting b/c finished');
+            // } else
+            if (
+                !visible &&
+                unMountOnHide &&
+                currentState === 'finished' &&
+                r.state.actionCount === routerState.actionCount
+            ) {
+                console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);
                 return null;
             } else {
                 console.log(r.name, ': ', 'Showing children');

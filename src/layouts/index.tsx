@@ -55,7 +55,7 @@ const animateJustShown = (ctx: AnimationCtx): void => {
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
-        duration: 500
+        duration: 1500
     });
     ctx.finish.push(animation.finished);
 };
@@ -120,7 +120,7 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
-        duration: 300
+        duration: 3000
     });
     ctx.finish.push(animation.finished);
 };
@@ -152,7 +152,7 @@ const Root = (): JSX.Element => {
                                 <Button>{'Show rocket'}</Button>
                             </RocketFeature.Link>
                             <RocketFeature.Animate
-                                enterAfterParentStart
+                                enterAfterParentFinish
                                 animationBinding={animationBinding}
                                 unMountOnHide
                                 when={[
