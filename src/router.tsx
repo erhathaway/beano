@@ -64,12 +64,12 @@ interface AnimateProps {
     children?: any;
     unMountOnHide?: boolean;
     unMountOnShow?: boolean;
-
+    id?: string;
     animationBinding?: AnimationBinding;
     enterAfterParentStart?: boolean;
     enterAfterParentFinish?: boolean;
-    exitAfterChildStart?: boolean;
-    exitAfterChildFinish?: boolean;
+    exitAfterChildStart?: string[];
+    exitAfterChildFinish?: string[];
 
     // exitAfterChildStart?: boolean;
     // children?: React.ForwardRefExoticComponent<
@@ -94,8 +94,10 @@ interface AnimateProps {
 
 type AnimationState = 'restarting' | 'initalizing' | 'running' | 'finished' | 'unmounted';
 
+type NotifyParentOfState = (id: string, state: AnimationState) => void;
+
 type AnimationBinding = {
-    notifyParentOfState: (state: AnimationState | undefined) => void;
+    notifyParentOfState: NotifyParentOfState;
     parentState: AnimationState;
 };
 
@@ -182,12 +184,119 @@ class AnimationControl {
     };
 }
 
-// export interface AnimationControl {
-//     finished?: Promise<any>;
-//     pause?: (...args: any[]) => any;
-// }
+type CurrentState = {
+    actionCount: number; // The current action count. Each layout change counts as an action
+    currentState: AnimationState; // 'restarting', 'initalizing', 'running', 'finished', 'unmounted'
+    hasRunForCycle: boolean; // Flag tracking whether this component has an animation is in progress for this action count
+    childStates: {
+        // The state of each child
+        [childId: string]: AnimationState | undefined;
+    };
+};
 
-export type ChildrenState = Record<string, AnimationState>;
+const setStateForNewAction = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => {
+        // increment action count
+        const actionCount = current.actionCount + 1;
+        // either cancel the existing animation ('restarting') or prep for new one ('initializing')
+        const currentState = current.currentState === 'running' ? 'restarting' : 'initalizing';
+        // set the flag recording if an animation has taken place to false
+        const hasRunForCycle = false;
+        // copy over unmounted child states b/c they wont be in play anymore
+        // otherwise set child states to undefined for this action
+        const childStates = Object.keys(current.childStates).reduce((acc, childId) => {
+            const currentChildState = current.childStates[childId];
+            if (currentChildState === 'unmounted') {
+                return {
+                    ...acc,
+                    [childId]: 'unmounted' as AnimationState
+                };
+            } else {
+                return {
+                    ...acc,
+                    [childId]: undefined
+                };
+            }
+        }, {} as {[childId: string]: AnimationState | undefined});
+
+        return {
+            actionCount,
+            currentState,
+            hasRunForCycle,
+            childStates
+        };
+    });
+};
+
+const setStateForFinishedAction = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        currentState: current.currentState === 'running' ? 'finished' : current.currentState
+    }));
+};
+
+const setHasRunForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        hasRunForCycle: true
+    }));
+};
+
+const setCurrentStateToRunningForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        currentState: 'running'
+    }));
+};
+
+const setCurrentStateToFinishedForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        currentState: 'finished'
+    }));
+};
+
+const setCurrentStateToInitializingForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        currentState: 'initalizing'
+    }));
+};
+
+const setChildStateForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): NotifyParentOfState => (id, state) => {
+    setEState(current => ({
+        ...current,
+        childStates: {
+            ...current.childStates,
+            [id]: state
+        }
+    }));
+};
+const childrenDontMatch = (
+    childrenOfInterest: string[],
+    statesToNotMatch: Array<AnimationState | undefined>,
+    allChildren: {[childId: string]: AnimationState | undefined}
+): boolean => {
+    return Object.keys(allChildren)
+        .filter(childId => childrenOfInterest.includes(childId))
+        .reduce((acc, childId) => {
+            return acc && statesToNotMatch.includes(allChildren[childId]);
+        }, true as boolean);
+};
 
 export const createRouterComponents = (
     routers: typeof manager['routers']
@@ -234,7 +343,8 @@ export const createRouterComponents = (
             when,
             children,
             unMountOnHide,
-            unMountOnShow,
+            id,
+            // unMountOnShow,
             enterAfterParentStart,
             enterAfterParentFinish,
             exitAfterChildStart,
@@ -245,26 +355,41 @@ export const createRouterComponents = (
         }) => {
             // const [shouldUnmountNode, setShouldUnmountNode] = useState<boolean>(false);
 
+            const [eState, setEState] = useState<CurrentState>({
+                actionCount: 0,
+                currentState: 'initalizing',
+                hasRunForCycle: false,
+                childStates: {}
+            });
+
+            const [uuid] = useId();
+
             const [routerState, setRouterState] = useState(r.state);
-            const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
-            const [childState, setChildState] = useState<AnimationState>();
+            // const [hasRunForCycle, setHasRunForCycle] = useState<boolean>(false);
+            // const [childState, setChildState] = useState<AnimationState>();
             const [ref, setRef] = useState<HTMLElement | null>();
 
             const refId = ref ? ref.id : undefined;
 
             const visible = r.state.visible || false;
 
-            const [currentState, setCurrentState] = useState<AnimationState>('initalizing');
-            console.log(r.name, ': ', 'START------------ref', refId, 'currentState:', currentState);
+            // const [currentState, setCurrentState] = useState<AnimationState>('initalizing');
+            console.log(
+                r.name,
+                ': ',
+                'START------------ref',
+                refId,
+                'currentState:',
+                eState.currentState
+            );
 
-            const createAnimationControl = () => {
+            const createAnimationControl = (): AnimationControl => {
                 const ac = new AnimationControl();
                 ac.setOnFinishAction(() => {
-                    // console.log(r.name, ': OHHHHHH yeah resolving');
-                    // console.log(r.name, ': ', 'Promise resolved. Setting state to finished');
-                    setCurrentState(currentState =>
-                        currentState === 'running' ? 'finished' : currentState
-                    );
+                    setStateForFinishedAction(setEState);
+                    // setCurrentState(currentState =>
+                    //     currentState === 'running' ? 'finished' : currentState
+                    // );
                 });
                 return ac;
             };
@@ -276,18 +401,18 @@ export const createRouterComponents = (
 
             useEffect(() => {
                 if (animationBinding) {
-                    console.log(r.name, ': ', 'Notifying parent of state', currentState);
+                    console.log(r.name, ': ', 'Notifying parent of state', eState.currentState);
 
-                    animationBinding.notifyParentOfState(currentState);
+                    animationBinding.notifyParentOfState(id || uuid, eState.currentState);
                 }
                 return () => {
                     if (animationBinding) {
                         console.log(r.name, ': ', 'Unmounting from unmount action');
 
-                        animationBinding.notifyParentOfState('unmounted');
+                        animationBinding.notifyParentOfState(id || uuid, 'unmounted');
                     }
                 };
-            }, [currentState]);
+            }, [eState.currentState]);
             /**
              * Subscribe to router state changes
              */
@@ -298,33 +423,34 @@ export const createRouterComponents = (
                             c.cancel();
                             return createAnimationControl();
                         });
-                        setCurrentState(current => {
-                            if (current === 'running') {
-                                console.log(
-                                    r.name,
-                                    ': ',
-                                    'Setting state to restarting in subscribe fn'
-                                );
-                                return 'restarting';
-                            } else {
-                                // if (!all.current.visible && ref === undefined) {
-                                //     console.log(
-                                //         r.name,
-                                //         ': ',
-                                //         'Setting state to unmounted in subscribe fn'
-                                //     );
-                                //     return 'unmounted';
-                                // } else {
-                                console.log(
-                                    r.name,
-                                    ': ',
-                                    'Setting state to initializing in subscribe fn'
-                                );
-                                return 'initalizing';
-                            }
-                        });
+                        setStateForNewAction(setEState);
+                        // setCurrentState(current => {
+                        //     if (current === 'running') {
+                        //         console.log(
+                        //             r.name,
+                        //             ': ',
+                        //             'Setting state to restarting in subscribe fn'
+                        //         );
+                        //         return 'restarting';
+                        //     } else {
+                        //         // if (!all.current.visible && ref === undefined) {
+                        //         //     console.log(
+                        //         //         r.name,
+                        //         //         ': ',
+                        //         //         'Setting state to unmounted in subscribe fn'
+                        //         //     );
+                        //         //     return 'unmounted';
+                        //         // } else {
+                        //         console.log(
+                        //             r.name,
+                        //             ': ',
+                        //             'Setting state to initializing in subscribe fn'
+                        //         );
+                        //         return 'initalizing';
+                        //     }
+                        // });
 
-                        setHasRunForCycle(false);
+                        // setHasRunForCycle(false);
 
                         setRouterState(all.current) as any;
                     });
@@ -365,6 +491,10 @@ export const createRouterComponents = (
             }, [routerState.actionCount]);
 
             useEffect(() => {
+                console.log(r.name, ': ', 'Updated eState action count', eState.actionCount);
+            }, [eState.actionCount]);
+
+            useEffect(() => {
                 console.log(r.name, ': ', 'Updated ref', refId);
                 if (!refId) {
                     console.log(r.name, ': ', 'Updated to no ref', refId);
@@ -381,9 +511,9 @@ export const createRouterComponents = (
              * Run animations whenever there is a state change
              */
             useEffect(() => {
-                console.log(r.name, ': ', 'Child state:', childState);
+                console.log(r.name, ': ', 'Child states:', eState.childStates);
 
-                if (currentState === 'restarting') {
+                if (eState.currentState === 'restarting') {
                     return;
                 }
                 // console.log('Action count or ref updated', r.name, ref);
@@ -394,10 +524,10 @@ export const createRouterComponents = (
 
                         animationControl.cancel();
                     }
-                    if (currentState !== 'initalizing') {
-                        console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
-                        // setCurrentState('initalizing');
-                    }
+                    // if (eState.currentState !== 'initalizing') {
+                    //     console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
+                    //     // setCurrentState('initalizing');
+                    // }
                     console.log(r.name, ': ', 'Skipping running of animation b/c ref missing');
 
                     return;
@@ -416,8 +546,14 @@ export const createRouterComponents = (
                 if (
                     !visible &&
                     exitAfterChildStart &&
-                    childState !== 'running' &&
-                    childState !== 'finished'
+                    exitAfterChildStart.length > 0 &&
+                    childrenDontMatch(
+                        exitAfterChildStart,
+                        ['running', 'finished'],
+                        eState.childStates
+                    )
+                    // childState !== 'running' &&
+                    // childState !== 'finished'
                 ) {
                     console.log(r.name, ': ', 'Waiting for child to start');
                     return;
@@ -431,26 +567,33 @@ export const createRouterComponents = (
                 if (
                     !visible &&
                     exitAfterChildFinish &&
-                    childState !== 'finished' &&
-                    childState !== 'unmounted' // will change to undefined if unmounted
+                    exitAfterChildFinish.length > 0 &&
+                    childrenDontMatch(
+                        exitAfterChildFinish,
+                        ['finished', 'unmounted'],
+                        eState.childStates
+                    )
+                    // childState !== 'finished' &&
+                    // childState !== 'unmounted' // will change to undefined if unmounted
                 ) {
                     console.log(r.name, ': ', 'Waiting for child to finish');
                     return;
                 }
 
                 // animate(ref);
-                if (hasRunForCycle === true) {
+                if (eState.hasRunForCycle === true) {
                     console.log(r.name, ': ', 'Has already run for cycle. Not running animation');
 
                     return;
                 }
                 console.log(r.name, ': ', 'Running animation');
-
-                setHasRunForCycle(true);
+                setHasRunForActionCount(setEState);
+                // setHasRunForCycle(true);
                 const {ctx: animationCtx, hasRun} = animate(ref);
                 console.log(r.name, ': ', 'Animation running with', hasRun, animationCtx);
                 if (hasRun) {
-                    setCurrentState('running');
+                    setCurrentStateToRunningForActionCount(setEState);
+                    // setCurrentState('running');
                 }
                 if (animationCtx.finish.length > 0) {
                     animationControl.createOnFinishPromise(animationCtx.finish);
@@ -460,36 +603,39 @@ export const createRouterComponents = (
                         ': ',
                         'No finish promises found. Setting state to finished'
                     );
-                    setCurrentState('finished');
+                    setCurrentStateToFinishedForActionCount(setEState);
+                    // setCurrentState('finished');
                 }
-            }, [routerState.actionCount, refId, parentState, childState, hasRunForCycle]);
+            }, [eState.actionCount, refId, parentState, JSON.stringify(eState.childStates)]);
 
             useEffect(() => {
-                console.log(r.name, ': ', 'Updated currentState', currentState);
-            }, [currentState]);
-            const [id] = useId();
+                console.log(r.name, ': ', 'Updated currentState', eState.currentState);
+            }, [eState.currentState]);
 
             useEffect(() => {
-                if (currentState === 'restarting') {
+                if (eState.currentState === 'restarting') {
                     console.log(r.name, 'Lifecycle ohhhh maybe');
-                    setCurrentState('initalizing');
+                    setCurrentStateToInitializingForActionCount(setEState);
+                    // setCurrentState('initalizing');
                     // return null;
                 }
-            }, [currentState]);
+            }, [eState.currentState]);
 
-            if (currentState === 'restarting') {
+            if (eState.currentState === 'restarting') {
                 console.log(r.name, 'Lifecycle ohhhh yeah');
                 // setCurrentState('initalizing');
+                // Return null to unmount children and allow new animation to be in correct dom position
+                // incase an animation applied a transform or similar
                 return null;
             }
-            if (ref == null && unMountOnHide && visible === false) {
-                return null;
-            }
+            // if (ref == null && unMountOnHide && visible === false) {
+            //     return null;
+            // }
             if (ref == null && visible === false) {
                 return null;
             }
 
-            const setRefTest = (ref: HTMLElement) => {
+            const setRefOfAnimateable = (ref: HTMLElement) => {
                 // console.log(r.name, 'SETTING REF TO:', ref);
                 // TODO: for some reason null is returned whenever this component rerenders.
                 // Possibly due to the cloneElement behavior.
@@ -503,11 +649,11 @@ export const createRouterComponents = (
             };
             const realChildren = children
                 ? React.cloneElement(children as any, {
-                      ref: setRefTest,
-                      id,
+                      ref: setRefOfAnimateable,
+                      id: id ? id : uuid,
                       animationBinding: {
-                          notifyParentOfState: setChildState,
-                          parentState: currentState
+                          notifyParentOfState: setChildStateForActionCount(setEState),
+                          parentState: eState.currentState
                       }
                   })
                 : null;
@@ -534,7 +680,7 @@ export const createRouterComponents = (
             if (
                 !visible &&
                 unMountOnHide &&
-                currentState === 'finished' &&
+                eState.currentState === 'finished' &&
                 r.state.actionCount === routerState.actionCount
             ) {
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);

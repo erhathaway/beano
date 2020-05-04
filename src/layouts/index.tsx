@@ -132,7 +132,7 @@ const Root = (): JSX.Element => {
         <RootLayoutContainer>
             <MoonScene.Animate
                 unMountOnHide
-                exitAfterChildFinish
+                exitAfterChildFinish={['1']}
                 when={[
                     [[isJustShown as any], animateJustShown],
                     [[isJustHidden as any], animateJustHidden]
@@ -152,6 +152,7 @@ const Root = (): JSX.Element => {
                                 <Button>{'Show rocket'}</Button>
                             </RocketFeature.Link>
                             <RocketFeature.Animate
+                                id={'1'}
                                 enterAfterParentFinish
                                 animationBinding={animationBinding}
                                 unMountOnHide
