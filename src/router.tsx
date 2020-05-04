@@ -197,6 +197,7 @@ type CurrentState = {
 const setStateForNewAction = (
     setEState: React.Dispatch<React.SetStateAction<CurrentState>>
 ): void => {
+    console.log('Setting new state for new action!!!!');
     setEState(current => {
         // increment action count
         const actionCount = current.actionCount + 1;
@@ -296,6 +297,14 @@ const childrenDontMatch = (
         .reduce((acc, childId) => {
             return acc && statesToNotMatch.includes(allChildren[childId]);
         }, true as boolean);
+};
+
+const childrenHaveReportedState = (allChildren: {
+    [childId: string]: AnimationState | undefined;
+}): boolean => {
+    return Object.keys(allChildren).reduce((acc, childId) => {
+        return acc && allChildren[childId] !== undefined;
+    }, true as boolean);
 };
 
 export const createRouterComponents = (
@@ -507,6 +516,10 @@ export const createRouterComponents = (
                 console.log(r.name, ': ', 'Updated parentState', parentState);
             }, [parentState]);
 
+            useEffect(() => {
+                console.log(r.name, ': ', 'Updated children states', eState.childStates);
+            }, [JSON.stringify(eState.childStates)]);
+
             /**
              * Run animations whenever there is a state change
              */
@@ -542,6 +555,15 @@ export const createRouterComponents = (
 
                     return;
                 }
+
+                // if (
+                //     !visible &&
+                //     (exitAfterChildStart || exitAfterChildFinish) &&
+                //     childrenOfInterestHaveReportedState(eState.childStates)
+                // ) {
+                //     console.log(r.name, ': ', 'Waiting for all children to have reported states');
+                //     return;
+                // }
 
                 if (
                     !visible &&
@@ -606,7 +628,13 @@ export const createRouterComponents = (
                     setCurrentStateToFinishedForActionCount(setEState);
                     // setCurrentState('finished');
                 }
-            }, [eState.actionCount, refId, parentState, JSON.stringify(eState.childStates)]);
+            }, [
+                eState.currentState,
+                eState.actionCount,
+                refId,
+                parentState,
+                JSON.stringify(eState.childStates)
+            ]);
 
             useEffect(() => {
                 console.log(r.name, ': ', 'Updated currentState', eState.currentState);
@@ -628,12 +656,12 @@ export const createRouterComponents = (
                 // incase an animation applied a transform or similar
                 return null;
             }
-            // if (ref == null && unMountOnHide && visible === false) {
-            //     return null;
-            // }
-            if (ref == null && visible === false) {
+            if (ref == null && unMountOnHide && visible === false) {
                 return null;
             }
+            // if (ref == null && visible === false) {
+            //     return null;
+            // }
 
             const setRefOfAnimateable = (ref: HTMLElement) => {
                 // console.log(r.name, 'SETTING REF TO:', ref);
@@ -680,8 +708,8 @@ export const createRouterComponents = (
             if (
                 !visible &&
                 unMountOnHide &&
-                eState.currentState === 'finished' &&
-                r.state.actionCount === routerState.actionCount
+                eState.currentState === 'finished' // &&
+                // r.state.actionCount === routerState.actionCount
             ) {
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);
                 return null;
