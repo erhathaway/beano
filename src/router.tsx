@@ -11,7 +11,8 @@ import {
     IOutputLocation
 } from 'router-primitives';
 
-const moonFeatures = [{name: 'rocket'}];
+const rocketFeatures = [{name: 'engine'}];
+const moonFeatures = [{name: 'rocket', children: {feature: rocketFeatures}}];
 const sunFeatures = [{name: 'river', defaultAction: ['show']} as IRouterDeclaration<any>];
 
 const routerDeclaration: IRouterDeclaration<any> = {
@@ -292,11 +293,33 @@ const childrenDontMatch = (
     statesToNotMatch: Array<AnimationState | undefined>,
     allChildren: {[childId: string]: AnimationState | undefined}
 ): boolean => {
-    return Object.keys(allChildren)
-        .filter(childId => childrenOfInterest.includes(childId))
-        .reduce((acc, childId) => {
-            return acc && statesToNotMatch.includes(allChildren[childId]);
-        }, true as boolean);
+    const childrenToLookAt = Object.keys(allChildren).filter(childId =>
+        childrenOfInterest.includes(childId)
+    );
+
+    if (childrenToLookAt.length === 0) {
+        return false;
+    }
+    return childrenToLookAt.reduce((acc, childId) => {
+        return acc && statesToNotMatch.includes(allChildren[childId]);
+    }, true as boolean);
+};
+
+const childrenMatch = (
+    childrenOfInterest: string[],
+    statesToMatch: Array<AnimationState | undefined>,
+    allChildren: {[childId: string]: AnimationState | undefined}
+): boolean => {
+    const childrenToLookAt = Object.keys(allChildren).filter(childId =>
+        childrenOfInterest.includes(childId)
+    );
+
+    if (childrenToLookAt.length === 0) {
+        return false;
+    }
+    return childrenToLookAt.reduce((acc, childId) => {
+        return acc && statesToMatch.includes(allChildren[childId]);
+    }, true as boolean);
 };
 
 const childrenHaveReportedState = (allChildren: {
@@ -410,10 +433,13 @@ export const createRouterComponents = (
 
             useEffect(() => {
                 if (animationBinding) {
-                    console.log(r.name, ': ', 'Notifying parent of state', eState.currentState);
+                    console.log(r.name, ': ', 'Notifying parent of state :))', eState.currentState);
 
                     animationBinding.notifyParentOfState(id || uuid, eState.currentState);
                 }
+            }, [eState.currentState]);
+
+            useEffect(() => {
                 return () => {
                     if (animationBinding) {
                         console.log(r.name, ': ', 'Unmounting from unmount action');
@@ -421,7 +447,7 @@ export const createRouterComponents = (
                         animationBinding.notifyParentOfState(id || uuid, 'unmounted');
                     }
                 };
-            }, [eState.currentState]);
+            }, ['onExit']);
             /**
              * Subscribe to router state changes
              */
@@ -571,7 +597,7 @@ export const createRouterComponents = (
                     exitAfterChildStart.length > 0 &&
                     childrenDontMatch(
                         exitAfterChildStart,
-                        ['running', 'finished'],
+                        ['running', 'finished', 'unmounted'],
                         eState.childStates
                     )
                     // childState !== 'running' &&
@@ -590,11 +616,16 @@ export const createRouterComponents = (
                     !visible &&
                     exitAfterChildFinish &&
                     exitAfterChildFinish.length > 0 &&
-                    childrenDontMatch(
+                    childrenMatch(
                         exitAfterChildFinish,
-                        ['finished', 'unmounted'],
+                        [undefined, 'restarting', 'initalizing', 'running'],
                         eState.childStates
                     )
+                    // childrenDontMatch(
+                    //     exitAfterChildFinish,
+                    //     ['finished', 'unmounted'],
+                    //     eState.childStates
+                    // )
                     // childState !== 'finished' &&
                     // childState !== 'unmounted' // will change to undefined if unmounted
                 ) {
@@ -678,7 +709,8 @@ export const createRouterComponents = (
             const realChildren = children
                 ? React.cloneElement(children as any, {
                       ref: setRefOfAnimateable,
-                      id: id ? id : uuid,
+                      //   id: id ? id : uuid,
+                      id: uuid,
                       animationBinding: {
                           notifyParentOfState: setChildStateForActionCount(setEState),
                           parentState: eState.currentState
@@ -708,8 +740,8 @@ export const createRouterComponents = (
             if (
                 !visible &&
                 unMountOnHide &&
-                eState.currentState === 'finished' // &&
-                // r.state.actionCount === routerState.actionCount
+                eState.currentState === 'finished' &&
+                r.state.actionCount === routerState.actionCount
             ) {
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);
                 return null;

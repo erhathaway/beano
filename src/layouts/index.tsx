@@ -12,6 +12,8 @@ const RootLayoutContainer = styled.div`
 `;
 
 const MoonScene = routerComponents['moon'];
+const EngineFeature = routerComponents['engine'];
+
 const RocketFeature = routerComponents['rocket'];
 
 const SunScene = routerComponents['sun'];
@@ -55,7 +57,7 @@ const animateJustShown = (ctx: AnimationCtx): void => {
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
-        duration: 1500
+        duration: 150
     });
     ctx.finish.push(animation.finished);
 };
@@ -104,7 +106,7 @@ const animateRocketJustShown = (ctx: AnimationCtx): void => {
 
         // opacity: [0, 1],
         // scale: [0, 1],
-        duration: 5000
+        duration: 500
         // delay: 500
     });
     ctx.finish.push(animation.finished);
@@ -120,7 +122,7 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
-        duration: 3000
+        duration: 300
     });
     ctx.finish.push(animation.finished);
 };
@@ -151,9 +153,13 @@ const Root = (): JSX.Element => {
                             <RocketFeature.Link action={'show'}>
                                 <Button>{'Show rocket'}</Button>
                             </RocketFeature.Link>
+                            <EngineFeature.Link action={'show'}>
+                                <Button>{'Show engine'}</Button>
+                            </EngineFeature.Link>
                             <RocketFeature.Animate
                                 id={'1'}
                                 enterAfterParentFinish
+                                exitAfterChildFinish={['2']}
                                 animationBinding={animationBinding}
                                 unMountOnHide
                                 when={[
@@ -162,12 +168,35 @@ const Root = (): JSX.Element => {
                                 ]}
                             >
                                 <AnimateableRocket>
-                                    {() => (
+                                    {rocketAnimationBinding => (
                                         <>
                                             {'rocket'}
                                             <RocketFeature.Link action={'hide'}>
                                                 <Button id="123">{'Hide rocket'}</Button>
                                             </RocketFeature.Link>
+                                            <EngineFeature.Animate
+                                                id={'2'}
+                                                enterAfterParentFinish
+                                                animationBinding={rocketAnimationBinding}
+                                                unMountOnHide
+                                                when={[
+                                                    [[isJustShown as any], animateRocketJustShown],
+                                                    [[isJustHidden as any], animateRocketJustHidden]
+                                                ]}
+                                            >
+                                                <AnimateableRocket>
+                                                    {() => (
+                                                        <>
+                                                            {'rocket'}
+                                                            <EngineFeature.Link action={'hide'}>
+                                                                <Button id="123">
+                                                                    {'Hide engine'}
+                                                                </Button>
+                                                            </EngineFeature.Link>
+                                                        </>
+                                                    )}
+                                                </AnimateableRocket>
+                                            </EngineFeature.Animate>
                                         </>
                                     )}
                                 </AnimateableRocket>
