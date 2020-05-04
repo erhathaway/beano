@@ -319,21 +319,21 @@ export const createRouterComponents = (
                                 );
                                 return 'restarting';
                             } else {
-                                if (!all.current.visible && ref === undefined) {
-                                    console.log(
-                                        r.name,
-                                        ': ',
-                                        'Setting state to unmounted in subscribe fn'
-                                    );
-                                    return 'unmounted';
-                                } else {
-                                    console.log(
-                                        r.name,
-                                        ': ',
-                                        'Setting state to initializing in subscribe fn'
-                                    );
-                                    return 'initalizing';
-                                }
+                                // if (!all.current.visible && ref === undefined) {
+                                //     console.log(
+                                //         r.name,
+                                //         ': ',
+                                //         'Setting state to unmounted in subscribe fn'
+                                //     );
+                                //     return 'unmounted';
+                                // } else {
+                                console.log(
+                                    r.name,
+                                    ': ',
+                                    'Setting state to initializing in subscribe fn'
+                                );
+                                return 'initalizing';
+                                // }
                                 // TODO keep changing the initial state away from 'iniatlizing' to 'undefined'
                                 // if the component is mounted change it to initalizing
                                 // if the component is visible and unmouunted change it to initalizing
