@@ -571,6 +571,14 @@ export const createRouterComponents = (
 
                     return;
                 }
+
+                // animate(ref);
+                if (eState.hasRunForCycle === true) {
+                    console.log(r.name, ': ', 'Has already run for cycle. Not running animation');
+
+                    return;
+                }
+
                 if (
                     visible &&
                     enterAfterParentStart &&
@@ -595,9 +603,10 @@ export const createRouterComponents = (
                     !visible &&
                     exitAfterChildStart &&
                     exitAfterChildStart.length > 0 &&
-                    childrenDontMatch(
+                    childrenMatch(
                         exitAfterChildStart,
-                        ['running', 'finished', 'unmounted'],
+                        // if matches the states that come before the finished state
+                        [undefined, 'restarting', 'initalizing'],
                         eState.childStates
                     )
                     // childState !== 'running' &&
@@ -618,6 +627,7 @@ export const createRouterComponents = (
                     exitAfterChildFinish.length > 0 &&
                     childrenMatch(
                         exitAfterChildFinish,
+                        // if matches the states that come before the finished state
                         [undefined, 'restarting', 'initalizing', 'running'],
                         eState.childStates
                     )
@@ -633,12 +643,6 @@ export const createRouterComponents = (
                     return;
                 }
 
-                // animate(ref);
-                if (eState.hasRunForCycle === true) {
-                    console.log(r.name, ': ', 'Has already run for cycle. Not running animation');
-
-                    return;
-                }
                 console.log(r.name, ': ', 'Running animation');
                 setHasRunForActionCount(setEState);
                 // setHasRunForCycle(true);
@@ -741,6 +745,8 @@ export const createRouterComponents = (
                 !visible &&
                 unMountOnHide &&
                 eState.currentState === 'finished' &&
+                // TODO figure out generic way to handle with agnostic of routers
+                // !!!!
                 r.state.actionCount === routerState.actionCount
             ) {
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);

@@ -57,7 +57,7 @@ const animateJustShown = (ctx: AnimationCtx): void => {
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
-        duration: 150
+        duration: 550
     });
     ctx.finish.push(animation.finished);
 };
