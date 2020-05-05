@@ -268,6 +268,15 @@ const setCurrentStateToFinishedForActionCount = (
     }));
 };
 
+const setCurrentStateToUnmountedForActionCount = (
+    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+): void => {
+    setEState(current => ({
+        ...current,
+        currentState: 'unmounted'
+    }));
+};
+
 const setCurrentStateToInitializingForActionCount = (
     setEState: React.Dispatch<React.SetStateAction<CurrentState>>
 ): void => {
@@ -563,6 +572,9 @@ export const createRouterComponents = (
 
                         animationControl.cancel();
                     }
+                    if (!visible) {
+                        setCurrentStateToUnmountedForActionCount(setEState);
+                    }
                     // if (eState.currentState !== 'initalizing') {
                     //     console.log(r.name, ': ', 'Setting Animation lifecycle to: initalizing');
                     //     // setCurrentState('initalizing');
@@ -741,6 +753,11 @@ export const createRouterComponents = (
             //     console.log(r.name, ': ', 'Unmounting b/c finished');
             //     return null;
             // } else
+            if (eState.currentState === 'unmounted') {
+                console.log(r.name, ': ', 'Unmounted. Returning null');
+
+                return null;
+            }
             if (
                 !visible &&
                 unMountOnHide &&
@@ -750,6 +767,9 @@ export const createRouterComponents = (
                 r.state.actionCount === routerState.actionCount
             ) {
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);
+                if (eState.currentState === 'finished') {
+                    setCurrentStateToUnmountedForActionCount(setEState);
+                }
                 return null;
             } else {
                 console.log(r.name, ': ', 'Showing children');
