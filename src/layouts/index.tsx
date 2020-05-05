@@ -31,7 +31,8 @@ const AnimateableMoon = styled(Animateable)`
     position: relative;
     display: flex;
     height: 200px
-    // width: 200px;
+    width: 200px;
+    border-radius: 50%;
     background-color: blue;
 `;
 
@@ -46,6 +47,7 @@ const AnimateableSun = styled.div`
     position: absolute;
     height: 100;
     width: 200;
+    border-radius: 50%;
     background-color: yellow;
 `;
 
