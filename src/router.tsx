@@ -761,12 +761,12 @@ export const createRouterComponents = (
             if (
                 !visible &&
                 unMountOnHide &&
-                eState.currentState === 'finished'
-                // &&
+                eState.currentState === 'finished' &&
                 // TODO figure out generic way to handle with agnostic of routers
                 // !!!!
-                // r.state.actionCount === routerState.actionCount
+                r.state.actionCount === routerState.actionCount
             ) {
+                console.log(r.name, ': ', 'DEBUG', eState);
                 console.log(r.name, ': ', 'Unmounting b/c finished', r.state, routerState);
                 if (eState.currentState === 'finished') {
                     setCurrentStateToUnmountedForActionCount(setEState);
