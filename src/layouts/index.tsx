@@ -1,8 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import {routerComponents, AnimationCtx, Animateable} from '../router';
+import {routerComponents, AnimationCtx} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
+import Animateable from '../animateable';
 
 const RootLayoutContainer = styled.div`
     width: calc(100% - 80px);
@@ -158,7 +159,7 @@ const Root = (): JSX.Element => {
                             <EngineFeature.Link action={'show'}>
                                 <Button>{'Show engine'}</Button>
                             </EngineFeature.Link>
-                            <RocketFeature.Animate
+                            {/* <RocketFeature.Animate
                                 id={'1'}
                                 enterAfterParentFinish
                                 exitAfterChildFinish={['2']}
@@ -202,7 +203,7 @@ const Root = (): JSX.Element => {
                                         </>
                                     )}
                                 </AnimateableRocket>
-                            </RocketFeature.Animate>
+                            </RocketFeature.Animate> */}
                         </>
                     )}
                 </AnimateableMoon>
