@@ -125,13 +125,22 @@ export const createRouterComponents = (
 
             animationBinding
         }) => {
-            const [_triggerState, setTriggerState] = useState<typeof r.state>(r.state);
+            const [_triggerState, setTriggerState] = useState<typeof r.state>({
+                visible: r.state.visible,
+                data: r.state.data,
+                actionCount: r.state.actionCount
+            });
 
             useEffect(() => {
                 console.log(r.name, 'new router state');
                 if (r && r.subscribe) {
                     r.subscribe(all => {
-                        setTriggerState(all.current);
+                        const state = all.current;
+                        setTriggerState({
+                            visible: state.visible,
+                            data: state.data,
+                            actionCount: state.actionCount
+                        });
                     });
                 }
                 return;

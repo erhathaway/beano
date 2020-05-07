@@ -159,7 +159,7 @@ const Root = (): JSX.Element => {
                             <EngineFeature.Link action={'show'}>
                                 <Button>{'Show engine'}</Button>
                             </EngineFeature.Link>
-                            {/* <RocketFeature.Animate
+                            <RocketFeature.Animate
                                 id={'1'}
                                 enterAfterParentFinish
                                 exitAfterChildFinish={['2']}
@@ -203,7 +203,7 @@ const Root = (): JSX.Element => {
                                         </>
                                     )}
                                 </AnimateableRocket>
-                            </RocketFeature.Animate> */}
+                            </RocketFeature.Animate>
                         </>
                     )}
                 </AnimateableMoon>

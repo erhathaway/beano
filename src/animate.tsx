@@ -233,24 +233,13 @@ const Animate = <PredicateState extends any, TriggerState>({
         };
     }, ['onExit']);
 
-    console.log(name, 'here - begin');
-
     useEffect(() => {
-        // if (r && r.subscribe) {
-        //     r.subscribe(all => {
         setAnimationControl(c => {
             c.cancel();
             return createAnimationControl();
         });
         setStateForNewAction(setEState);
-
-        // setTriggerState(all.current) as any;
-        // });
-        // }
-        // return;
     }, [JSON.stringify(_triggerState)]);
-
-    console.log(name, 'here - 1');
 
     useEffect(() => {
         setTriggerState(triggerState);
