@@ -132,7 +132,7 @@ export const createRouterComponents = (
             });
 
             useEffect(() => {
-                console.log(r.name, 'new router state');
+                // console.log(r.name, 'new router state');
                 if (r && r.subscribe) {
                     r.subscribe(all => {
                         const state = all.current;
@@ -146,15 +146,15 @@ export const createRouterComponents = (
                 return;
             }, ['startup']);
 
-            console.log(
-                'hurrrr',
-                r.name,
-                _triggerState.visible
-                // _triggerState,
-                // r,
-                // '******',
-                // children
-            );
+            // console.log(
+            //     'hurrrr',
+            //     r.name,
+            //     _triggerState.visible
+            //     // _triggerState,
+            //     // r,
+            //     // '******',
+            //     // children
+            // );
             return (
                 <BaseAnimate
                     name={r.name}

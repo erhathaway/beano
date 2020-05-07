@@ -34,18 +34,20 @@ interface AnimateProps<PS, TS> {
     exitAfterChildFinish?: string[];
 }
 
-type CurrentState = {
+type CurrentState<TriggerState> = {
     actionCount: number; // The current action count. Each layout change counts as an action
     currentState: AnimationState; // 'restarting', 'initalizing', 'running', 'finished', 'unmounted'
     hasRunForCycle: boolean; // Flag tracking whether this component has an animation is in progress for this action count
+    triggerState: TriggerState;
     childStates: {
         // The state of each child
         [childId: string]: AnimationState | undefined;
     };
 };
 
-const setStateForNewAction = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setStateForNewAction = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>,
+    triggerState: TriggerState
 ): void => {
     console.log('Setting new state for new action!!!!');
     setEState(current => {
@@ -75,14 +77,15 @@ const setStateForNewAction = (
         return {
             actionCount,
             currentState,
+            triggerState,
             hasRunForCycle,
             childStates
         };
     });
 };
 
-const setStateForFinishedAction = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setStateForFinishedAction = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -90,8 +93,8 @@ const setStateForFinishedAction = (
     }));
 };
 
-const setHasRunForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setHasRunForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -99,8 +102,8 @@ const setHasRunForActionCount = (
     }));
 };
 
-const setCurrentStateToRunningForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setCurrentStateToRunningForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -108,8 +111,8 @@ const setCurrentStateToRunningForActionCount = (
     }));
 };
 
-const setCurrentStateToFinishedForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setCurrentStateToFinishedForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -117,8 +120,8 @@ const setCurrentStateToFinishedForActionCount = (
     }));
 };
 
-const setCurrentStateToUnmountedForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setCurrentStateToUnmountedForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -126,8 +129,8 @@ const setCurrentStateToUnmountedForActionCount = (
     }));
 };
 
-const setCurrentStateToInitializingForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setCurrentStateToInitializingForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): void => {
     setEState(current => ({
         ...current,
@@ -135,8 +138,8 @@ const setCurrentStateToInitializingForActionCount = (
     }));
 };
 
-const setChildStateForActionCount = (
-    setEState: React.Dispatch<React.SetStateAction<CurrentState>>
+const setChildStateForActionCount = <TriggerState extends any>(
+    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
 ): NotifyParentOfState => (id, state) => {
     setEState(current => ({
         ...current,
@@ -185,22 +188,34 @@ const Animate = <PredicateState extends any, TriggerState>({
 }: AnimateProps<PredicateState, TriggerState>): ReturnType<React.FC<
     AnimateProps<PredicateState, TriggerState>
 >> => {
-    const [eState, setEState] = useState<CurrentState>({
+    const [eState, setEState] = useState<CurrentState<TriggerState>>({
         actionCount: 0,
         currentState: 'initalizing',
         hasRunForCycle: false,
+        triggerState,
         childStates: {}
     });
 
     const [uuid] = useId();
 
-    const [_triggerState, setTriggerState] = useState(triggerState);
-
     const [ref, setRef] = useState<HTMLElement | null>();
 
     const refId = ref ? ref.id : undefined;
 
-    console.log(name, ': ', 'START------------ref', refId, 'currentState:', eState.currentState);
+    console.log(
+        name,
+        ': ',
+        'START------------ref',
+        refId,
+        'currentState:',
+        eState.currentState,
+        'child state',
+        eState.childStates,
+        'incoming trigger',
+        triggerState,
+        'old trigger',
+        eState.triggerState
+    );
 
     const createAnimationControl = (): AnimationControl => {
         const ac = new AnimationControl();
@@ -238,11 +253,7 @@ const Animate = <PredicateState extends any, TriggerState>({
             c.cancel();
             return createAnimationControl();
         });
-        setStateForNewAction(setEState);
-    }, [JSON.stringify(_triggerState)]);
-
-    useEffect(() => {
-        setTriggerState(triggerState);
+        setStateForNewAction(setEState, triggerState);
     }, [JSON.stringify(triggerState)]);
 
     const animate = (node: HTMLElement) => {
@@ -394,8 +405,6 @@ const Animate = <PredicateState extends any, TriggerState>({
         JSON.stringify(eState.childStates)
     ]);
 
-    console.log(name, 'here - after');
-
     useEffect(() => {
         console.log(name, ': ', 'Updated currentState', eState.currentState);
     }, [eState.currentState]);
@@ -459,16 +468,17 @@ const Animate = <PredicateState extends any, TriggerState>({
 
         return null;
     }
+
     if (
         !visible &&
         unMountOnHide &&
         eState.currentState === 'finished' &&
-        // TODO figure out generic way to handle with agnostic of routers
-        // !!!!
-        JSON.stringify(triggerState) === JSON.stringify(_triggerState)
-        // r.state.actionCount === routerState.actionCount
+        // TODO change to only do a shallow compare
+        // Guard against running one new trigger states.
+        //  Often, on !visible states we are also in the 'finished' state
+        //  doing an unmount at the beginning can kill the child animations
+        JSON.stringify(triggerState) === JSON.stringify(eState.triggerState)
     ) {
-        console.log(name, ': ', 'DEBUG', eState);
         console.log(name, ': ', 'Unmounting b/c finished', triggerState, eState);
         if (eState.currentState === 'finished') {
             setCurrentStateToUnmountedForActionCount(setEState);
