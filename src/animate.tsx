@@ -4,7 +4,8 @@ import {useId} from 'react-id-generator';
 import AnimationControl from './animate_control';
 import {AnimationState, AnimationBinding, NotifyParentOfState} from './types';
 
-type Predicates<T> = Array<(predicateState: T) => boolean>;
+type Predicate<T> = (predicateState: T) => boolean;
+type Predicates<T> = Array<Predicate<T>>;
 
 export type AnimationCtx = {
     node: HTMLElement;
@@ -19,7 +20,7 @@ interface AnimateProps<PS, TS> {
     triggerState: TS;
     predicateState: PS;
 
-    when?: Array<[Predicates<PS>, Animations]>;
+    when?: Array<[Predicates<PS> | Predicate<PS>, Animations]>;
     children?: any;
 
     unMountOnHide?: boolean;
@@ -263,9 +264,15 @@ const Animate = <PredicateState extends any, TriggerState>({
                 if (hasRun) {
                     return acc;
                 }
-                const shouldRun = predicateAnimation[0].reduce((accc, predicate) => {
-                    return accc && predicate(predicateState);
-                }, true);
+                let shouldRun: boolean;
+                const predicate = predicateAnimation[0];
+                if (Array.isArray(predicate)) {
+                    shouldRun = predicate.reduce((accc, predicate) => {
+                        return accc && predicate(predicateState);
+                    }, true as boolean);
+                } else {
+                    shouldRun = predicate(predicateState);
+                }
 
                 if (shouldRun) {
                     const newCtx = predicateAnimation[1](ctx);

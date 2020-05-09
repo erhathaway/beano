@@ -2,7 +2,7 @@
 
 import React, {useState, useEffect} from 'react';
 
-import {RouterInstance, IOutputLocation, IManager} from 'router-primitives';
+import {RouterInstance, IOutputLocation, IManager, IRouterTemplates} from 'router-primitives';
 import {AnimationBinding} from './types';
 import BaseAnimate from './animate';
 
@@ -15,7 +15,8 @@ interface LinkProps {
     children?: React.ReactNode;
 }
 
-type Predicates = Array<(route: RouterInstance<any>) => boolean>;
+type Predicate = <T extends IRouterTemplates<unknown>>(route: RouterInstance<T>) => boolean;
+type Predicates = Array<Predicate>;
 
 export type AnimationCtx = {
     node: HTMLElement;
@@ -25,7 +26,7 @@ export type AnimationCtx = {
 type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 
 interface RouterAnimateProps {
-    when?: Array<[Predicates, Animations]>;
+    when?: Array<[Predicates | Predicate, Animations]>;
     children?: any;
     unMountOnHide?: boolean;
     unMountOnShow?: boolean;

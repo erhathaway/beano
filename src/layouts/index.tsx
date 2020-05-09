@@ -4,6 +4,7 @@ import {AnimationCtx, createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
+import Animate from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 
 // const rocketFeatures = [{name: 'engine'}];
@@ -83,6 +84,11 @@ const AnimationsController = styled.div`
     position: relative;
     // background-color: gray;
     display: flex;
+`;
+
+const NativeAnimations = styled(Native)`
+    position: relative;
+    // background-color: orange;
 `;
 const RouterPrimitiveAnimations = styled(RouterPrimitives)`
     position: relative;
@@ -201,20 +207,38 @@ const Root = (): JSX.Element => {
     return (
         <RootLayoutContainer>
             <AnimationsController>
-                <RouterPrimitives.Link action={'show'}>
-                    <Button id="123">{'Show Router Primitive Animations'}</Button>
-                </RouterPrimitives.Link>
                 <Native.Link action={'show'}>
                     <Button>{'Show Native Animations'}</Button>
                 </Native.Link>
+                <RouterPrimitives.Link action={'show'}>
+                    <Button id="123">{'Show Router Primitive Animations'}</Button>
+                </RouterPrimitives.Link>
             </AnimationsController>
+            <NativeAnimations>
+                <Animate
+                    name={'native'}
+                    visible={false}
+                    predicateState={{is: true, here: 'now'}}
+                    triggerState={false}
+                >
+                    <AnimateableRocket>
+                        {() => (
+                            <>
+                                {'engine'}
+                                <div>{'world'}</div>
+                            </>
+                        )}
+                    </AnimateableRocket>
+                </Animate>
+                {'hello'}
+            </NativeAnimations>
             <RouterPrimitiveAnimations>
                 <MoonScene.Animate
                     unMountOnHide
                     exitAfterChildFinish={['1']}
                     when={[
-                        [[isJustShown], animateJustShown],
-                        [[isJustHidden as any], animateJustHidden]
+                        [isJustShown as any, animateJustShown],
+                        [isJustHidden as any, animateJustHidden]
                     ]}
                 >
                     <AnimateableMoon>
@@ -240,8 +264,8 @@ const Root = (): JSX.Element => {
                                     animationBinding={animationBinding}
                                     unMountOnHide
                                     when={[
-                                        [[isJustShown as any], animateRocketJustShown],
-                                        [[isJustHidden as any], animateRocketJustHidden]
+                                        [isJustShown as any, animateRocketJustShown],
+                                        [isJustHidden as any, animateRocketJustHidden]
                                     ]}
                                 >
                                     <AnimateableRocket>
@@ -258,11 +282,11 @@ const Root = (): JSX.Element => {
                                                     unMountOnHide
                                                     when={[
                                                         [
-                                                            [isJustShown as any],
+                                                            isJustShown as any,
                                                             animateRocketJustShown
                                                         ],
                                                         [
-                                                            [isJustHidden as any],
+                                                            isJustHidden as any,
                                                             animateRocketJustHidden
                                                         ]
                                                     ]}
@@ -291,8 +315,8 @@ const Root = (): JSX.Element => {
                 <SunScene.Animate
                     unMountOnHide
                     when={[
-                        [[isJustShown as any], animateJustShown],
-                        [[isJustHidden as any], animateJustHidden]
+                        [isJustShown as any, animateJustShown],
+                        [isJustHidden as any, animateJustHidden]
                     ]}
                 >
                     <AnimateableSun>
