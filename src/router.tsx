@@ -2,38 +2,9 @@
 
 import React, {useState, useEffect} from 'react';
 
-import {
-    Manager,
-    IRouterDeclaration,
-    RouterInstance,
-    IRouterTemplates,
-    IOutputLocation
-} from 'router-primitives';
+import {RouterInstance, IOutputLocation, IManager} from 'router-primitives';
 import {AnimationBinding} from './types';
 import BaseAnimate from './animate';
-
-const rocketFeatures = [{name: 'engine'}];
-const moonFeatures = [{name: 'rocket', children: {feature: rocketFeatures}}];
-const sunFeatures = [{name: 'river', defaultAction: ['show']} as IRouterDeclaration<any>];
-
-const routerDeclaration: IRouterDeclaration<any> = {
-    name: 'root',
-    children: {
-        scene: [
-            {name: 'sun', children: {feature: sunFeatures}},
-            {name: 'moon', defaultAction: ['show'], children: {feature: moonFeatures}}
-        ],
-        feature: [{name: 'trees'}, {name: 'mountains'}]
-    }
-};
-
-let manager: Manager<IRouterTemplates<unknown>>;
-
-try {
-    manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unknown>>;
-} catch (e) {
-    console.log(e);
-}
 
 interface Props {
     children?: React.ReactNode;
@@ -71,9 +42,7 @@ type RouterT = React.FC<Props> & {
     Animate: React.FC<RouterAnimateProps>;
 };
 
-export const createRouterComponents = (
-    routers: typeof manager['routers']
-): Record<string, RouterT> => {
+export const createRouterComponents = (routers: IManager['routers']): Record<string, RouterT> => {
     return Object.keys(routers).reduce((acc, routerName) => {
         const r = routers[routerName];
 
@@ -178,6 +147,3 @@ export const createRouterComponents = (
         return {...acc, [routerName]: updated};
     }, {} as Record<string, RouterT>);
 };
-
-export const routers = manager.routers;
-export const routerComponents = createRouterComponents(routers);
