@@ -185,7 +185,7 @@ const Animate = <PredicateState extends any, TriggerState>({
 
     when,
     children,
-    unMountOnHide,
+    unMountOnHide: _unMountOnHide,
     id,
 
     enterAfterParentStart,
@@ -212,6 +212,7 @@ const Animate = <PredicateState extends any, TriggerState>({
 
     const refId = ref ? ref.id : undefined;
 
+    const unMountOnHide = _unMountOnHide === undefined ? true : _unMountOnHide;
     console.log(
         name,
         ': ',
@@ -224,7 +225,11 @@ const Animate = <PredicateState extends any, TriggerState>({
         'incoming trigger',
         triggerState,
         'old trigger',
-        eState.triggerState
+        eState.triggerState,
+        'incoming visibility',
+        visible,
+        'old visibility',
+        eState.visible
     );
 
     const createAnimationControl = (): AnimationControl => {
