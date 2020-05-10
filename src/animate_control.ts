@@ -18,7 +18,7 @@ export default class AnimationControl {
     };
 
     // eslint-disable-next-line
-    createOnFinishPromise = (promises: Promise<any>[] = []): Promise<any> => {
+    createOnFinishPromise = (animationFinishPromise: Promise<any>): Promise<any> => {
         console.log('** CREATING ON FINISH');
         let hasCanceled = false;
         this._onFinishPromise = new Promise((fulfill, _reject) => {
@@ -31,7 +31,7 @@ export default class AnimationControl {
             };
 
             try {
-                Promise.all(promises)
+                animationFinishPromise
                     .then(() => {
                         console.log('** FULLFILLING PROMISEE!!!');
 

@@ -14,18 +14,28 @@ export type Predicates = Array<Predicate>;
 
 export type AnimationCtx = {
     node: HTMLElement;
-    classNames: string[];
-    finish: Array<Promise<any>>;
+    // classNames: string[];
+    // finish: Array<Promise<any>>;
 };
-type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 
+export interface IAnimationResult {
+    finished: Promise<any>;
+}
+
+export type AnimationRun = {hasRun: boolean; ctx: AnimationCtx; animationResult: AnimationResult};
+
+export type AnimationResult = IAnimationResult | null;
+
+type PredicateAnimation = (ctx: AnimationCtx) => AnimationResult;
+
+export type When = Array<[Predicates | Predicate, PredicateAnimation]>;
 interface AnimateProps<PS, TS> {
     name: string; // TODO make me optional in the future
     visible: boolean;
     triggerState?: TS;
     predicateState?: PS;
 
-    when?: Array<[Predicates | Predicate, Animations]>;
+    when?: When;
     children?: any;
 
     unMountOnHide?: boolean;
@@ -276,7 +286,7 @@ const Animate = <PredicateState extends any, TriggerState>({
         setStateForNewAction(setEState, triggerState, visible);
     }, [JSON.stringify(triggerState), visible]);
 
-    const animate = (node: HTMLElement) => {
+    const animate = (node: HTMLElement): AnimationRun => {
         return (when || []).reduce(
             (acc, predicateAnimation) => {
                 const {hasRun, ctx} = acc;
@@ -294,19 +304,18 @@ const Animate = <PredicateState extends any, TriggerState>({
                 }
 
                 if (shouldRun) {
-                    const newCtx = predicateAnimation[1](ctx);
-                    if (newCtx) {
-                        return {hasRun: true, ctx: newCtx};
+                    const animation = predicateAnimation[1];
+
+                    const animationResult = animation(ctx);
+                    if (animationResult) {
+                        return {hasRun: true, ctx, animationResult};
                     } else {
-                        return {hasRun: true, ctx};
+                        return {...acc, hasRun: true, ctx};
                     }
                 }
                 return acc;
             },
-            {hasRun: false, ctx: {node, classNames: [], finish: []}} as {
-                hasRun: boolean;
-                ctx: AnimationCtx;
-            }
+            {hasRun: false, ctx: {node}, animationResult: null} as AnimationRun
         );
     };
 
@@ -416,14 +425,14 @@ const Animate = <PredicateState extends any, TriggerState>({
         console.log(name, ': ', 'Running animation');
         setHasRunForActionCount(setEState);
 
-        const {ctx: animationCtx, hasRun} = animate(ref);
+        const {ctx: animationCtx, hasRun, animationResult} = animate(ref);
         console.log(name, ': ', 'Animation running with', hasRun, animationCtx);
 
         if (hasRun) {
             setCurrentStateToRunningForActionCount(setEState);
         }
-        if (animationCtx.finish.length > 0) {
-            animationControl.createOnFinishPromise(animationCtx.finish);
+        if (animationResult && animationResult.finished) {
+            animationControl.createOnFinishPromise(animationResult.finished);
         } else {
             console.log(name, ': ', 'No finish promises found. Setting state to finished');
             setCurrentStateToFinishedForActionCount(setEState);

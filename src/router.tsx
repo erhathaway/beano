@@ -4,7 +4,7 @@ import React, {useState, useEffect} from 'react';
 
 import {IOutputLocation, IManager} from 'router-primitives';
 import {AnimationBinding} from './types';
-import BaseAnimate, {Predicate, Predicates} from './animate';
+import BaseAnimate, {When} from './animate';
 
 interface Props {
     children?: React.ReactNode;
@@ -15,21 +15,8 @@ interface LinkProps {
     children?: React.ReactNode;
 }
 
-// type Predicate = <T extends IRouterTemplates<unknown>>(
-//     route: RouterInstance<T>,
-//     ...args: any[]
-// ) => boolean;
-// type Predicates = Array<Predicate>;
-
-export type AnimationCtx = {
-    node: HTMLElement;
-    classNames: string[];
-    finish: Array<Promise<any>>;
-};
-type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
-
 interface RouterAnimateProps {
-    when?: Array<[Predicates | Predicate, Animations]>;
+    when?: When;
     children?: any;
     unMountOnHide?: boolean;
     unMountOnShow?: boolean;
@@ -119,15 +106,6 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
                 return;
             }, ['startup']);
 
-            // console.log(
-            //     'hurrrr',
-            //     r.name,
-            //     _triggerState.visible
-            //     // _triggerState,
-            //     // r,
-            //     // '******',
-            //     // children
-            // );
             return (
                 <BaseAnimate
                     name={r.name}

@@ -8,10 +8,6 @@ import Animate from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 import predicates from '../predicates';
 
-// const rocketFeatures = [{name: 'engine'}];
-// const moonFeatures = [{name: 'rocket', children: {feature: rocketFeatures}}];
-// const sunFeatures = [{name: 'river', defaultAction: ['show']} as IRouterDeclaration<any>];
-
 const routerDeclaration: IRouterDeclaration<any> = {
     name: 'root',
     children: {
@@ -92,18 +88,8 @@ const Button = styled.div`
 
 const AnimationsController = styled.div`
     position: relative;
-    // background-color: gray;
     display: flex;
 `;
-
-// const NativeAnimations = styled(Native)`
-//     position: relative;
-//     // background-color: orange;
-// `;
-// const RouterPrimitiveAnimations = styled(RouterPrimitives)`
-//     position: relative;
-//     // background-color: orange;
-// `;
 
 const RouterPrimitiveAnimationsControl = styled.div`
     display: flex;
@@ -119,17 +105,16 @@ const AnimateableMoon = styled(Animateable)`
 `;
 
 const AnimateableNative = styled(Animateable)`
-position: relative;
-display: flex;
-height: 200px
-width: 200px;
-border-radius: 50%;
-background-color: yellow;
+    position: relative;
+    display: flex;
+    height: 200px
+    width: 200px;
+    border-radius: 50%;
+    background-color: yellow;
 `;
 
 const AnimateableRocket = styled(Animateable)`
     position: absolute;
-
     width: 200;
     background-color: green;
 `;
@@ -146,129 +131,97 @@ const AnimateableSun = styled.div`
     background-color: yellow;
 `;
 
-const animateJustShown = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-
-    const animation = anime({
+const animateJustShown = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
         duration: 550
     });
-    ctx.finish.push(animation.finished);
 };
 
-const animateJustHidden = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    // const changeBegan = 0;
-    // const changeCompleted = 0;
-
-    const animation = anime({
+const animateJustHidden = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
-        // translateX: [0, 200],
-        // opacity: [0, 1],
-        // scale: [0, 1]
-        // duration: 500
         translateX: [200, 400],
         translateY: [0, 500],
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
         duration: 5000
-        // backgroundColor: ['hsl(250, 75%, 50%)', 'hsl(200, 50%, 50%)']
-        // update: function(anim) {
-        //     changeBegan++;
-        //     console.log('%%%%%% change began : ' + changeBegan);
-        // },
-        // changeBegin: function(anim) {
-        //     changeCompleted++;
-        //     console.log('change completed : ' + changeCompleted);
-        // },
-        // delay: 4000
     });
-    // setTimeout(() => {
-    //     // animation.pause();
-    //     anime.remove(`#${ctx.node.id}`);
-    // }, 500);
-    ctx.finish.push(animation.finished);
 };
 
-const animateRocketJustShown = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+const animateNativeJustShown = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
+        targets: `#${ctx.node.id}`,
+        translateX: [0, 200],
+        opacity: [0, 1],
+        scale: [0, 1],
+        duration: 850
+    });
+};
 
-    const animation = anime({
+const animateNativeJustHidden = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
+        targets: `#${ctx.node.id}`,
+        translateX: [200, 400],
+        translateY: [0, 500],
+        opacity: [1, 0],
+        scale: [1, 0.2],
+        easing: 'linear',
+        duration: 800
+    });
+};
+
+const animateRocketJustShown = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
         translateX: ['0px', '100px'],
-
-        // opacity: [0, 1],
-        // scale: [0, 1],
         duration: 500
-        // delay: 500
     });
-    ctx.finish.push(animation.finished);
 };
 
-const animateEngineJustShown = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-
-    const animation = anime({
+const animateEngineJustShown = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
         translateX: ['0px', '100px'],
-
-        // opacity: [0, 1],
-        // scale: [0, 1],
         duration: 200
-        // delay: 500
     });
-    ctx.finish.push(animation.finished);
 };
 
-const animateRocketJustHidden = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    const animation = anime({
+const animateRocketJustHidden = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 400],
         translateY: [0, 400],
-
         opacity: [1, 0],
         scale: [1, 0.2],
         easing: 'linear',
         duration: 300
     });
-    ctx.finish.push(animation.finished);
 };
 
-const animateSceneIn = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-
-    const animation = anime({
+const animateSceneIn = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
-        translateX: ['-30%', 0],
+        translateX: ['-300%', 0],
         scale: [0.5, 1],
-
         opacity: [0, 1],
-        // scale: [0, 1],
-        duration: 300,
+        duration: 400,
         easing: 'linear'
-
-        // delay: 500
     });
-    ctx.finish.push(animation.finished);
 };
 
-const animateSceneOut = (ctx: AnimationCtx): void => {
-    console.log('oh hi', '$$$$$$$$', ctx.node.id);
-    const animation = anime({
+const animateSceneOut = (ctx: AnimationCtx): AnimationResult => {
+    return anime({
         targets: `#${ctx.node.id}`,
-        translateX: [0, '200%'],
-        scale: [1, 0.8],
-        // opacity: [1, 0],
-        // scale: [0, 1],
-        duration: 300
-        // easing: 'linear'
+        translateX: [0, '300%'],
+        position: 'fixed',
+        scale: [1, 0],
+        duration: 5000
     });
-    ctx.finish.push(animation.finished);
 };
 
 const {isJustHidden, isJustShown} = statePredicates;
@@ -327,8 +280,14 @@ const Root = (): JSX.Element => {
                                                     // triggerState={isVisible}
                                                     exitAfterChildFinish={['inside']}
                                                     when={[
-                                                        [predicates.isVisible, animateJustShown],
-                                                        [predicates.isHidden, animateJustHidden]
+                                                        [
+                                                            predicates.isVisible,
+                                                            animateNativeJustShown
+                                                        ],
+                                                        [
+                                                            predicates.isHidden,
+                                                            animateNativeJustHidden
+                                                        ]
                                                     ]}
                                                 >
                                                     <AnimateableNative>
@@ -349,11 +308,11 @@ const Root = (): JSX.Element => {
                                                                     when={[
                                                                         [
                                                                             predicates.isVisible,
-                                                                            animateJustShown
+                                                                            animateNativeJustShown
                                                                         ],
                                                                         [
                                                                             predicates.isHidden,
-                                                                            animateJustHidden
+                                                                            animateNativeJustHidden
                                                                         ]
                                                                     ]}
                                                                 >
