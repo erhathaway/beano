@@ -19,6 +19,7 @@ const routerDeclaration: IRouterDeclaration<any> = {
             {name: 'native'},
             {
                 name: 'router-primitives',
+                defaultAction: ['show'],
                 children: {
                     scene: [
                         {
@@ -29,7 +30,15 @@ const routerDeclaration: IRouterDeclaration<any> = {
                             name: 'moon',
                             defaultAction: ['show'],
                             children: {
-                                feature: [{name: 'rocket', children: {feature: [{name: 'engine'}]}}]
+                                feature: [
+                                    {
+                                        name: 'rocket',
+                                        defaultAction: ['show'],
+                                        children: {
+                                            feature: [{name: 'engine', defaultAction: ['show']}]
+                                        }
+                                    }
+                                ]
                             }
                         }
                     ],
@@ -190,11 +199,26 @@ const animateRocketJustShown = (ctx: AnimationCtx): void => {
 
     const animation = anime({
         targets: `#${ctx.node.id}`,
-        translateX: [0, 100],
+        translateX: ['0px', '100px'],
 
         // opacity: [0, 1],
         // scale: [0, 1],
         duration: 500
+        // delay: 500
+    });
+    ctx.finish.push(animation.finished);
+};
+
+const animateEngineJustShown = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        translateX: ['0px', '100px'],
+
+        // opacity: [0, 1],
+        // scale: [0, 1],
+        duration: 200
         // delay: 500
     });
     ctx.finish.push(animation.finished);
@@ -423,7 +447,7 @@ const Root = (): JSX.Element => {
                                                                 when={[
                                                                     [
                                                                         isJustShown as any,
-                                                                        animateRocketJustShown
+                                                                        animateEngineJustShown
                                                                     ],
                                                                     [
                                                                         isJustHidden as any,
