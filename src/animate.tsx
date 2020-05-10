@@ -179,7 +179,7 @@ const childrenMatch = (
 const Animate = <PredicateState extends any, TriggerState>({
     name,
 
-    visible,
+    visible: visibleProp,
     triggerState,
     predicateState,
 
@@ -205,6 +205,11 @@ const Animate = <PredicateState extends any, TriggerState>({
         visible: false,
         childStates: {}
     });
+
+    const visible =
+        animationBinding && animationBinding.parentVisible === false ? false : visibleProp;
+
+    // const visible = visibleProp;
 
     const [uuid] = useId();
 
@@ -317,10 +322,15 @@ const Animate = <PredicateState extends any, TriggerState>({
     }, [refId]);
 
     const parentState = (animationBinding && animationBinding.parentState) || 'initalizing';
+    const parentVisible = (animationBinding && animationBinding.parentVisible) || true;
 
     useEffect(() => {
         console.log(name, ': ', 'Updated parentState', parentState);
     }, [parentState]);
+
+    useEffect(() => {
+        console.log(name, ': ', 'Updated parentVisible', parentVisible);
+    }, [parentVisible]);
 
     useEffect(() => {
         console.log(name, ': ', 'Updated children states', eState.childStates);
@@ -464,7 +474,8 @@ const Animate = <PredicateState extends any, TriggerState>({
               id: uuid,
               animationBinding: {
                   notifyParentOfState: setChildStateForActionCount(setEState),
-                  parentState: eState.currentState
+                  parentState: eState.currentState,
+                  parentVisible: eState.visible
               }
           })
         : null;
