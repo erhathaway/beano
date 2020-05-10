@@ -240,8 +240,8 @@ const Root = (): JSX.Element => {
                             <Animate
                                 name={'native'}
                                 visible={isVisible}
-                                predicateState={{is: true, here: 'now'}}
-                                triggerState={isVisible}
+                                // predicateState={{is: true, here: 'now'}}
+                                // triggerState={isVisible}
                                 when={[
                                     [predicates.isVisible, animateJustShown],
                                     [predicates.isHidden, animateJustHidden]

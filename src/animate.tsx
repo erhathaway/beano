@@ -10,9 +10,6 @@ export type Predicate = <PS, TS>(
     {triggerState, visible}: {triggerState: TS; visible: boolean}
 ) => boolean;
 
-export const isVisible: Predicate = (_, {visible}) => visible;
-export const isHidden: Predicate = (_, {visible}) => !visible;
-
 export type Predicates = Array<Predicate>;
 
 export type AnimationCtx = {
@@ -25,8 +22,8 @@ type Animations = (ctx: AnimationCtx) => void | AnimationCtx;
 interface AnimateProps<PS, TS> {
     name: string; // TODO make me optional in the future
     visible: boolean;
-    triggerState: TS;
-    predicateState: PS;
+    triggerState?: TS;
+    predicateState?: PS;
 
     when?: Array<[Predicates | Predicate, Animations]>;
     children?: any;
@@ -52,11 +49,13 @@ type CurrentState<TriggerState> = {
         // The state of each child
         [childId: string]: AnimationState | undefined;
     };
+    visible: boolean;
 };
 
 const setStateForNewAction = <TriggerState extends any>(
     setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>,
-    triggerState: TriggerState
+    triggerState: TriggerState,
+    visible: boolean
 ): void => {
     console.log('Setting new state for new action!!!!');
     setEState(current => {
@@ -88,7 +87,8 @@ const setStateForNewAction = <TriggerState extends any>(
             currentState,
             triggerState,
             hasRunForCycle,
-            childStates
+            childStates,
+            visible
         };
     });
 };
@@ -197,11 +197,12 @@ const Animate = <PredicateState extends any, TriggerState>({
 }: AnimateProps<PredicateState, TriggerState>): ReturnType<React.FC<
     AnimateProps<PredicateState, TriggerState>
 >> => {
-    const [eState, setEState] = useState<CurrentState<TriggerState>>({
+    const [eState, setEState] = useState<CurrentState<TriggerState | undefined>>({
         actionCount: 0,
         currentState: 'initalizing',
         hasRunForCycle: false,
-        triggerState,
+        triggerState: triggerState || undefined,
+        visible: false,
         childStates: {}
     });
 
@@ -262,8 +263,8 @@ const Animate = <PredicateState extends any, TriggerState>({
             c.cancel();
             return createAnimationControl();
         });
-        setStateForNewAction(setEState, triggerState);
-    }, [JSON.stringify(triggerState)]);
+        setStateForNewAction(setEState, triggerState, visible);
+    }, [JSON.stringify(triggerState), visible]);
 
     const animate = (node: HTMLElement) => {
         return (when || []).reduce(
