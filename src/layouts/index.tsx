@@ -87,14 +87,14 @@ const AnimationsController = styled.div`
     display: flex;
 `;
 
-const NativeAnimations = styled(Native)`
-    position: relative;
-    // background-color: orange;
-`;
-const RouterPrimitiveAnimations = styled(RouterPrimitives)`
-    position: relative;
-    // background-color: orange;
-`;
+// const NativeAnimations = styled(Native)`
+//     position: relative;
+//     // background-color: orange;
+// `;
+// const RouterPrimitiveAnimations = styled(RouterPrimitives)`
+//     position: relative;
+//     // background-color: orange;
+// `;
 
 const RouterPrimitiveAnimationsControl = styled.div`
     display: flex;
@@ -123,6 +123,10 @@ const AnimateableRocket = styled(Animateable)`
 
     width: 200;
     background-color: green;
+`;
+
+const AnimateableNativeContainer = styled(Animateable)`
+    // background-color: teal;
 `;
 
 const AnimateableSun = styled.div`
@@ -211,6 +215,38 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
     ctx.finish.push(animation.finished);
 };
 
+const animateSceneIn = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        translateX: ['-30%', 0],
+        scale: [0.5, 1],
+
+        opacity: [0, 1],
+        // scale: [0, 1],
+        duration: 300,
+        easing: 'linear'
+
+        // delay: 500
+    });
+    ctx.finish.push(animation.finished);
+};
+
+const animateSceneOut = (ctx: AnimationCtx): void => {
+    console.log('oh hi', '$$$$$$$$', ctx.node.id);
+    const animation = anime({
+        targets: `#${ctx.node.id}`,
+        translateX: [0, '200%'],
+        scale: [1, 0.8],
+        // opacity: [1, 0],
+        // scale: [0, 1],
+        duration: 300
+        // easing: 'linear'
+    });
+    ctx.finish.push(animation.finished);
+};
+
 const {isJustHidden, isJustShown} = statePredicates;
 
 const VisibleToggle: React.FC<{children: any}> = ({children}) => {
@@ -232,178 +268,222 @@ const Root = (): JSX.Element => {
                     <Button id="123">{'Show Router Primitive Animations'}</Button>
                 </RouterPrimitives.Link>
             </AnimationsController>
-            <NativeAnimations>
-                <VisibleToggle>
-                    {({isVisible: isVisibleOne, toggleVisible: toggleVisibleOne}) => (
-                        <VisibleToggle>
-                            {({isVisible: isVisibleTwo, toggleVisible: toggleVisibleTwo}) => (
-                                <>
-                                    <Button
-                                        onClick={toggleVisibleOne}
-                                    >{`toggle native - ${isVisibleOne}`}</Button>
+            <Native.Animate
+                unMountOnHide
+                exitAfterChildFinish={['1']}
+                when={[
+                    [isJustShown as any, animateSceneIn],
+                    [isJustHidden as any, animateSceneOut]
+                ]}
+            >
+                <AnimateableNativeContainer>
+                    {animationBinding => (
+                        <>
+                            <VisibleToggle>
+                                {({isVisible: isVisibleOne, toggleVisible: toggleVisibleOne}) => (
+                                    <VisibleToggle>
+                                        {({
+                                            isVisible: isVisibleTwo,
+                                            toggleVisible: toggleVisibleTwo
+                                        }) => (
+                                            <>
+                                                <Button
+                                                    onClick={toggleVisibleOne}
+                                                >{`toggle native - ${isVisibleOne}`}</Button>
 
-                                    <Button
-                                        onClick={toggleVisibleTwo}
-                                    >{`toggle inside - ${isVisibleTwo}`}</Button>
-                                    <Animate
-                                        name={'native'}
-                                        visible={isVisibleOne}
-                                        // predicateState={{is: true, here: 'now'}}
-                                        // triggerState={isVisible}
-                                        exitAfterChildFinish={['inside']}
-                                        when={[
-                                            [predicates.isVisible, animateJustShown],
-                                            [predicates.isHidden, animateJustHidden]
-                                        ]}
-                                    >
-                                        <AnimateableNative>
-                                            {nativeAnimationBinding => (
-                                                <div>
-                                                    {'engine'}
-                                                    <div>{'world'}</div>
-                                                    <Animate
-                                                        id={'inside'}
-                                                        name={'inside'}
-                                                        visible={isVisibleTwo}
-                                                        enterAfterParentFinish
-                                                        animationBinding={nativeAnimationBinding}
-                                                        // predicateState={{is: true, here: 'now'}}
-                                                        // triggerState={isVisible}
-                                                        when={[
-                                                            [
-                                                                predicates.isVisible,
-                                                                animateJustShown
-                                                            ],
-                                                            [predicates.isHidden, animateJustHidden]
-                                                        ]}
-                                                    >
-                                                        <AnimateableNative>
-                                                            {() => (
-                                                                <div>
-                                                                    {'engine'}
-                                                                    <div>{'world'}</div>
-                                                                </div>
-                                                            )}
-                                                        </AnimateableNative>
-                                                    </Animate>
-                                                </div>
-                                            )}
-                                        </AnimateableNative>
-                                    </Animate>
-                                </>
-                            )}
-                        </VisibleToggle>
+                                                <Button
+                                                    onClick={toggleVisibleTwo}
+                                                >{`toggle inside - ${isVisibleTwo}`}</Button>
+                                                <Animate
+                                                    enterAfterParentFinish
+                                                    animationBinding={animationBinding}
+                                                    name={'native'}
+                                                    visible={isVisibleOne}
+                                                    // predicateState={{is: true, here: 'now'}}
+                                                    // triggerState={isVisible}
+                                                    exitAfterChildFinish={['inside']}
+                                                    when={[
+                                                        [predicates.isVisible, animateJustShown],
+                                                        [predicates.isHidden, animateJustHidden]
+                                                    ]}
+                                                >
+                                                    <AnimateableNative>
+                                                        {nativeAnimationBinding => (
+                                                            <div>
+                                                                {'engine'}
+                                                                <div>{'world'}</div>
+                                                                <Animate
+                                                                    id={'inside'}
+                                                                    name={'inside'}
+                                                                    visible={isVisibleTwo}
+                                                                    enterAfterParentFinish
+                                                                    animationBinding={
+                                                                        nativeAnimationBinding
+                                                                    }
+                                                                    // predicateState={{is: true, here: 'now'}}
+                                                                    // triggerState={isVisible}
+                                                                    when={[
+                                                                        [
+                                                                            predicates.isVisible,
+                                                                            animateJustShown
+                                                                        ],
+                                                                        [
+                                                                            predicates.isHidden,
+                                                                            animateJustHidden
+                                                                        ]
+                                                                    ]}
+                                                                >
+                                                                    <AnimateableNative>
+                                                                        {() => (
+                                                                            <div>
+                                                                                {'engine'}
+                                                                                <div>{'world'}</div>
+                                                                            </div>
+                                                                        )}
+                                                                    </AnimateableNative>
+                                                                </Animate>
+                                                            </div>
+                                                        )}
+                                                    </AnimateableNative>
+                                                </Animate>
+                                            </>
+                                        )}
+                                    </VisibleToggle>
+                                )}
+                            </VisibleToggle>
+                            {'hello'}
+                        </>
                     )}
-                </VisibleToggle>
-                {'hello'}
-            </NativeAnimations>
-            <RouterPrimitiveAnimations>
-                <MoonScene.Animate
-                    unMountOnHide
-                    exitAfterChildFinish={['1']}
-                    when={[
-                        [isJustShown as any, animateJustShown],
-                        [isJustHidden as any, animateJustHidden]
-                    ]}
-                >
-                    <AnimateableMoon>
-                        {animationBinding => (
-                            <>
-                                {'moon'}
-                                <MoonScene.Link action={'hide'}>
-                                    <Button id="123">{'Hide moon'}</Button>
+                </AnimateableNativeContainer>
+            </Native.Animate>
+            <RouterPrimitives.Animate
+                unMountOnHide
+                exitAfterChildFinish={['1']}
+                when={[
+                    [isJustShown as any, animateSceneIn],
+                    [isJustHidden as any, animateSceneOut]
+                ]}
+            >
+                <Animateable>
+                    {routerPrimitivesAnimationBinding => (
+                        <>
+                            <MoonScene.Animate
+                                animationBinding={routerPrimitivesAnimationBinding}
+                                enterAfterParentFinish
+                                unMountOnHide
+                                exitAfterChildFinish={['1']}
+                                when={[
+                                    [isJustShown as any, animateJustShown],
+                                    [isJustHidden as any, animateJustHidden]
+                                ]}
+                            >
+                                <AnimateableMoon>
+                                    {animationBinding => (
+                                        <>
+                                            {'moon'}
+                                            <MoonScene.Link action={'hide'}>
+                                                <Button id="123">{'Hide moon'}</Button>
+                                            </MoonScene.Link>
+                                            <SunScene.Link action={'show'}>
+                                                <Button>{'Show Sun'}</Button>
+                                            </SunScene.Link>
+                                            <RocketFeature.Link action={'show'}>
+                                                <Button>{'Show rocket'}</Button>
+                                            </RocketFeature.Link>
+                                            <EngineFeature.Link action={'show'}>
+                                                <Button>{'Show engine'}</Button>
+                                            </EngineFeature.Link>
+                                            <RocketFeature.Animate
+                                                id={'1'}
+                                                enterAfterParentFinish
+                                                exitAfterChildFinish={['2']}
+                                                animationBinding={animationBinding}
+                                                unMountOnHide
+                                                when={[
+                                                    [isJustShown as any, animateRocketJustShown],
+                                                    [isJustHidden as any, animateRocketJustHidden]
+                                                ]}
+                                            >
+                                                <AnimateableRocket>
+                                                    {rocketAnimationBinding => (
+                                                        <>
+                                                            {'rocket'}
+                                                            <RocketFeature.Link action={'hide'}>
+                                                                <Button id="123">
+                                                                    {'Hide rocket'}
+                                                                </Button>
+                                                            </RocketFeature.Link>
+                                                            <EngineFeature.Animate
+                                                                id={'2'}
+                                                                enterAfterParentFinish
+                                                                animationBinding={
+                                                                    rocketAnimationBinding
+                                                                }
+                                                                unMountOnHide
+                                                                when={[
+                                                                    [
+                                                                        isJustShown as any,
+                                                                        animateRocketJustShown
+                                                                    ],
+                                                                    [
+                                                                        isJustHidden as any,
+                                                                        animateRocketJustHidden
+                                                                    ]
+                                                                ]}
+                                                            >
+                                                                <AnimateableRocket>
+                                                                    {() => (
+                                                                        <>
+                                                                            {'engine'}
+                                                                            <EngineFeature.Link
+                                                                                action={'hide'}
+                                                                            >
+                                                                                <Button id="123">
+                                                                                    {'Hide engine'}
+                                                                                </Button>
+                                                                            </EngineFeature.Link>
+                                                                        </>
+                                                                    )}
+                                                                </AnimateableRocket>
+                                                            </EngineFeature.Animate>
+                                                        </>
+                                                    )}
+                                                </AnimateableRocket>
+                                            </RocketFeature.Animate>
+                                        </>
+                                    )}
+                                </AnimateableMoon>
+                            </MoonScene.Animate>
+                            <SunScene.Animate
+                                unMountOnHide
+                                when={[
+                                    [isJustShown as any, animateJustShown],
+                                    [isJustHidden as any, animateJustHidden]
+                                ]}
+                            >
+                                <AnimateableSun>
+                                    {'sun'}
+                                    <SunScene.Link action={'hide'}>
+                                        <Button>{'Hide Sun'}</Button>
+                                    </SunScene.Link>
+                                    <MoonScene.Link action={'show'}>
+                                        <Button>{'Show Moon'}</Button>
+                                    </MoonScene.Link>
+                                </AnimateableSun>
+                            </SunScene.Animate>
+                            {'main'}
+                            <RouterPrimitiveAnimationsControl>
+                                <MoonScene.Link action={'show'}>
+                                    <Button>{'Show Moon'}</Button>
                                 </MoonScene.Link>
                                 <SunScene.Link action={'show'}>
                                     <Button>{'Show Sun'}</Button>
                                 </SunScene.Link>
-                                <RocketFeature.Link action={'show'}>
-                                    <Button>{'Show rocket'}</Button>
-                                </RocketFeature.Link>
-                                <EngineFeature.Link action={'show'}>
-                                    <Button>{'Show engine'}</Button>
-                                </EngineFeature.Link>
-                                <RocketFeature.Animate
-                                    id={'1'}
-                                    enterAfterParentFinish
-                                    exitAfterChildFinish={['2']}
-                                    animationBinding={animationBinding}
-                                    unMountOnHide
-                                    when={[
-                                        [isJustShown as any, animateRocketJustShown],
-                                        [isJustHidden as any, animateRocketJustHidden]
-                                    ]}
-                                >
-                                    <AnimateableRocket>
-                                        {rocketAnimationBinding => (
-                                            <>
-                                                {'rocket'}
-                                                <RocketFeature.Link action={'hide'}>
-                                                    <Button id="123">{'Hide rocket'}</Button>
-                                                </RocketFeature.Link>
-                                                <EngineFeature.Animate
-                                                    id={'2'}
-                                                    enterAfterParentFinish
-                                                    animationBinding={rocketAnimationBinding}
-                                                    unMountOnHide
-                                                    when={[
-                                                        [
-                                                            isJustShown as any,
-                                                            animateRocketJustShown
-                                                        ],
-                                                        [
-                                                            isJustHidden as any,
-                                                            animateRocketJustHidden
-                                                        ]
-                                                    ]}
-                                                >
-                                                    <AnimateableRocket>
-                                                        {() => (
-                                                            <>
-                                                                {'engine'}
-                                                                <EngineFeature.Link action={'hide'}>
-                                                                    <Button id="123">
-                                                                        {'Hide engine'}
-                                                                    </Button>
-                                                                </EngineFeature.Link>
-                                                            </>
-                                                        )}
-                                                    </AnimateableRocket>
-                                                </EngineFeature.Animate>
-                                            </>
-                                        )}
-                                    </AnimateableRocket>
-                                </RocketFeature.Animate>
-                            </>
-                        )}
-                    </AnimateableMoon>
-                </MoonScene.Animate>
-                <SunScene.Animate
-                    unMountOnHide
-                    when={[
-                        [isJustShown as any, animateJustShown],
-                        [isJustHidden as any, animateJustHidden]
-                    ]}
-                >
-                    <AnimateableSun>
-                        {'sun'}
-                        <SunScene.Link action={'hide'}>
-                            <Button>{'Hide Sun'}</Button>
-                        </SunScene.Link>
-                        <MoonScene.Link action={'show'}>
-                            <Button>{'Show Moon'}</Button>
-                        </MoonScene.Link>
-                    </AnimateableSun>
-                </SunScene.Animate>
-                {'main'}
-                <RouterPrimitiveAnimationsControl>
-                    <MoonScene.Link action={'show'}>
-                        <Button>{'Show Moon'}</Button>
-                    </MoonScene.Link>
-                    <SunScene.Link action={'show'}>
-                        <Button>{'Show Sun'}</Button>
-                    </SunScene.Link>
-                </RouterPrimitiveAnimationsControl>
-            </RouterPrimitiveAnimations>
+                            </RouterPrimitiveAnimationsControl>
+                        </>
+                    )}
+                </Animateable>
+            </RouterPrimitives.Animate>
         </RootLayoutContainer>
     );
 };

@@ -498,7 +498,8 @@ const Animate = <PredicateState extends any, TriggerState>({
         // Guard against running one new trigger states.
         //  Often, on !visible states we are also in the 'finished' state
         //  doing an unmount at the beginning can kill the child animations
-        JSON.stringify(triggerState) === JSON.stringify(eState.triggerState)
+        JSON.stringify({triggerState, visible}) ===
+            JSON.stringify({triggerState: eState.triggerState, visible: eState.visible})
     ) {
         console.log(name, ': ', 'Unmounting b/c finished', triggerState, eState);
         if (eState.currentState === 'finished') {
