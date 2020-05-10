@@ -1,11 +1,12 @@
-import React, {useState} from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import {AnimationCtx, createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
-import Animate, {isHidden} from '../animate';
+import Animate from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
+import predicates from '../predicates';
 
 // const rocketFeatures = [{name: 'engine'}];
 // const moonFeatures = [{name: 'rocket', children: {feature: rocketFeatures}}];
@@ -242,8 +243,8 @@ const Root = (): JSX.Element => {
                                 predicateState={{is: true, here: 'now'}}
                                 triggerState={isVisible}
                                 when={[
-                                    [() => true, animateJustShown],
-                                    [isHidden, animateJustHidden]
+                                    [predicates.isVisible, animateJustShown],
+                                    [predicates.isHidden, animateJustHidden]
                                 ]}
                             >
                                 <AnimateableNative>
