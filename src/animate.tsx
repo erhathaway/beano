@@ -4,8 +4,16 @@ import {useId} from 'react-id-generator';
 import AnimationControl from './animate_control';
 import {AnimationState, AnimationBinding, NotifyParentOfState} from './types';
 
-type Predicate<T> = (predicateState: T) => boolean;
-type Predicates<T> = Array<Predicate<T>>;
+// type Predicate<T> = (predicateState: T) => boolean;
+export type Predicate = <PS, TS>(
+    predicateState: PS,
+    {triggerState, visible}: {triggerState: TS; visible: boolean}
+) => boolean;
+
+export const isVisible: Predicate = (_, {visible}) => visible;
+export const isHidden: Predicate = (_, {visible}) => !visible;
+
+export type Predicates = Array<Predicate>;
 
 export type AnimationCtx = {
     node: HTMLElement;
@@ -20,7 +28,7 @@ interface AnimateProps<PS, TS> {
     triggerState: TS;
     predicateState: PS;
 
-    when?: Array<[Predicates<PS> | Predicate<PS>, Animations]>;
+    when?: Array<[Predicates | Predicate, Animations]>;
     children?: any;
 
     unMountOnHide?: boolean;
@@ -268,10 +276,10 @@ const Animate = <PredicateState extends any, TriggerState>({
                 const predicate = predicateAnimation[0];
                 if (Array.isArray(predicate)) {
                     shouldRun = predicate.reduce((accc, predicate) => {
-                        return accc && predicate(predicateState);
+                        return accc && predicate(predicateState, {triggerState, visible});
                     }, true as boolean);
                 } else {
-                    shouldRun = predicate(predicateState);
+                    shouldRun = predicate(predicateState, {triggerState, visible});
                 }
 
                 if (shouldRun) {

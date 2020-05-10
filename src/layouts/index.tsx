@@ -1,10 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styled from 'styled-components';
 import {AnimationCtx, createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
-import Animate from '../animate';
+import Animate, {isHidden} from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 
 // const rocketFeatures = [{name: 'engine'}];
@@ -48,7 +48,7 @@ const manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unk
 // }
 
 const routers = manager.routers;
-const routerComponents = createRouterComponents(routers);
+const routerComponents = createRouterComponents(routers as any);
 
 const RootLayoutContainer = styled.div`
     display: flex;
@@ -106,6 +106,15 @@ const AnimateableMoon = styled(Animateable)`
     width: 200px;
     border-radius: 50%;
     background-color: blue;
+`;
+
+const AnimateableNative = styled(Animateable)`
+position: relative;
+display: flex;
+height: 200px
+width: 200px;
+border-radius: 50%;
+background-color: red;
 `;
 
 const AnimateableRocket = styled(Animateable)`
@@ -203,6 +212,14 @@ const animateRocketJustHidden = (ctx: AnimationCtx): void => {
 
 const {isJustHidden, isJustShown} = statePredicates;
 
+const VisibleToggle: React.FC<{children: any}> = ({children}) => {
+    const [isVisible, setVisible] = React.useState<boolean>(true);
+
+    const toggleVisible = (): void => {
+        setVisible(state => !state);
+    };
+    return children({toggleVisible, isVisible});
+};
 const Root = (): JSX.Element => {
     return (
         <RootLayoutContainer>
@@ -215,21 +232,32 @@ const Root = (): JSX.Element => {
                 </RouterPrimitives.Link>
             </AnimationsController>
             <NativeAnimations>
-                <Animate
-                    name={'native'}
-                    visible={false}
-                    predicateState={{is: true, here: 'now'}}
-                    triggerState={false}
-                >
-                    <AnimateableRocket>
-                        {() => (
-                            <>
-                                {'engine'}
-                                <div>{'world'}</div>
-                            </>
-                        )}
-                    </AnimateableRocket>
-                </Animate>
+                <VisibleToggle>
+                    {({isVisible, toggleVisible}) => (
+                        <>
+                            <Button onClick={toggleVisible}>{'toggle native'}</Button>
+                            <Animate
+                                name={'native'}
+                                visible={isVisible}
+                                predicateState={{is: true, here: 'now'}}
+                                triggerState={isVisible}
+                                when={[
+                                    [() => true, animateJustShown],
+                                    [isHidden, animateJustHidden]
+                                ]}
+                            >
+                                <AnimateableNative>
+                                    {() => (
+                                        <div>
+                                            {'engine'}
+                                            <div>{'world'}</div>
+                                        </div>
+                                    )}
+                                </AnimateableNative>
+                            </Animate>
+                        </>
+                    )}
+                </VisibleToggle>
                 {'hello'}
             </NativeAnimations>
             <RouterPrimitiveAnimations>

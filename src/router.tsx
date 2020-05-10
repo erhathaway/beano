@@ -2,9 +2,9 @@
 
 import React, {useState, useEffect} from 'react';
 
-import {RouterInstance, IOutputLocation, IManager, IRouterTemplates} from 'router-primitives';
+import {IOutputLocation, IManager} from 'router-primitives';
 import {AnimationBinding} from './types';
-import BaseAnimate from './animate';
+import BaseAnimate, {Predicate, Predicates} from './animate';
 
 interface Props {
     children?: React.ReactNode;
@@ -15,8 +15,11 @@ interface LinkProps {
     children?: React.ReactNode;
 }
 
-type Predicate = <T extends IRouterTemplates<unknown>>(route: RouterInstance<T>) => boolean;
-type Predicates = Array<Predicate>;
+// type Predicate = <T extends IRouterTemplates<unknown>>(
+//     route: RouterInstance<T>,
+//     ...args: any[]
+// ) => boolean;
+// type Predicates = Array<Predicate>;
 
 export type AnimationCtx = {
     node: HTMLElement;
