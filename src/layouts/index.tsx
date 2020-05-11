@@ -1,14 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
-import {AnimationCtx, createRouterComponents} from '../router';
+import {createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
-import Animate, {AnimationResult} from '../animate';
+import Animate, {AnimationCtx, AnimationResult} from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 import predicates from '../predicates';
 
-const routerDeclaration: IRouterDeclaration<any> = {
+const routerDeclaration: IRouterDeclaration<{}> = {
     name: 'root',
     children: {
         scene: [
@@ -117,9 +117,7 @@ const AnimateableRocket = styled(Animateable)`
     background-color: green;
 `;
 
-const AnimateableNativeContainer = styled(Animateable)`
-    // background-color: teal;
-`;
+const AnimateableNativeContainer = styled(Animateable)``;
 
 const AnimateableSun = styled.div`
     position: absolute;
@@ -215,7 +213,9 @@ const animateSceneOut = (ctx: AnimationCtx): AnimationResult =>
 
 const {isJustHidden, isJustShown} = statePredicates;
 
-const VisibleToggle: React.FC<{children: any}> = ({children}) => {
+const VisibleToggle: React.FC<{
+    children: (args: {isVisible: boolean; toggleVisible: () => void}) => React.ReactElement; //JSX.Element[] | React.ReactElement | React.ReactChild; //React.ReactChildren; // | React.ReactElement | null | undefined;
+}> = ({children}) => {
     const [isVisible, setVisible] = React.useState<boolean>(true);
 
     const toggleVisible = (): void => {
@@ -223,6 +223,7 @@ const VisibleToggle: React.FC<{children: any}> = ({children}) => {
     };
     return children({toggleVisible, isVisible});
 };
+
 const Root = (): JSX.Element => {
     return (
         <RootLayoutContainer>
@@ -238,8 +239,8 @@ const Root = (): JSX.Element => {
                 unMountOnHide
                 exitAfterChildFinish={['1']}
                 when={[
-                    [isJustShown as any, animateSceneIn],
-                    [isJustHidden as any, animateSceneOut]
+                    [isJustShown, animateSceneIn],
+                    [isJustHidden, animateSceneOut]
                 ]}
             >
                 <AnimateableNativeContainer>
@@ -265,8 +266,6 @@ const Root = (): JSX.Element => {
                                                     animationBinding={animationBinding}
                                                     name={'native'}
                                                     visible={isVisibleOne}
-                                                    // predicateState={{is: true, here: 'now'}}
-                                                    // triggerState={isVisible}
                                                     exitAfterChildFinish={['inside']}
                                                     when={[
                                                         [
@@ -292,8 +291,6 @@ const Root = (): JSX.Element => {
                                                                     animationBinding={
                                                                         nativeAnimationBinding
                                                                     }
-                                                                    // predicateState={{is: true, here: 'now'}}
-                                                                    // triggerState={isVisible}
                                                                     when={[
                                                                         [
                                                                             predicates.isVisible,
@@ -372,8 +369,8 @@ const Root = (): JSX.Element => {
                                                 animationBinding={animationBinding}
                                                 unMountOnHide
                                                 when={[
-                                                    [isJustShown as any, animateRocketJustShown],
-                                                    [isJustHidden as any, animateRocketJustHidden]
+                                                    [isJustShown, animateRocketJustShown],
+                                                    [isJustHidden, animateRocketJustHidden]
                                                 ]}
                                             >
                                                 <AnimateableRocket>
@@ -394,11 +391,11 @@ const Root = (): JSX.Element => {
                                                                 unMountOnHide
                                                                 when={[
                                                                     [
-                                                                        isJustShown as any,
+                                                                        isJustShown,
                                                                         animateEngineJustShown
                                                                     ],
                                                                     [
-                                                                        isJustHidden as any,
+                                                                        isJustHidden,
                                                                         animateRocketJustHidden
                                                                     ]
                                                                 ]}
@@ -429,8 +426,8 @@ const Root = (): JSX.Element => {
                             <SunScene.Animate
                                 unMountOnHide
                                 when={[
-                                    [isJustShown as any, animateJustShown],
-                                    [isJustHidden as any, animateJustHidden]
+                                    [isJustShown, animateJustShown],
+                                    [isJustHidden, animateJustHidden]
                                 ]}
                             >
                                 <AnimateableSun>

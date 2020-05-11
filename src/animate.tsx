@@ -5,7 +5,7 @@ import AnimationControl from './animate_control';
 import {AnimationState, AnimationBinding, NotifyParentOfState} from './types';
 
 // type Predicate<T> = (predicateState: T) => boolean;
-export type Predicate = <PS, TS>(
+export type Predicate = <PS extends any, TS extends any>(
     predicateState: PS,
     {triggerState, visible}: {triggerState: TS; visible: boolean}
 ) => boolean;
