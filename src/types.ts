@@ -26,8 +26,8 @@ export type CurrentState<TriggerState> = {
 };
 
 export type Predicate = <PS extends any, TS extends any>(
-    predicateState: PS,
-    {triggerState, visible}: {triggerState: TS; visible: boolean}
+    predicateState: any, // TODO replace with PS once excessively deep type problem is fixed
+    {triggerState, visible}: {triggerState: any; visible: boolean} // TODO replace with PS once excessively deep type problem is fixed
 ) => boolean;
 
 export type Predicates = Array<Predicate>;

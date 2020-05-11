@@ -1,11 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import {createRouterComponents} from '../router';
-import {statePredicates} from 'router-primitives';
+import {Manager, IRouterDeclaration, IRouterTemplates, statePredicates} from 'router-primitives';
 import anime from 'animejs';
+
 import Animateable from '../animateable';
 import Animate from '../animate';
-import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 import predicates from '../predicates';
 import {AnimationCtx, AnimationResult} from '../types';
 

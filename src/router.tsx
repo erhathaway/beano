@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import React, {useState, useEffect} from 'react';
-import {IOutputLocation, IManager} from 'router-primitives';
+import {IOutputLocation, RouterInstance, IRouterTemplates} from 'router-primitives';
 
 import {AnimationBinding, When} from './types';
 import BaseAnimate from './animate';
@@ -33,7 +33,9 @@ type RouterT = React.FC<Props> & {
     Animate: React.FC<RouterAnimateProps>;
 };
 
-export const createRouterComponents = (routers: IManager['routers']): Record<string, RouterT> => {
+export const createRouterComponents = <CustomTemplates extends IRouterTemplates>(
+    routers: Record<string, RouterInstance<CustomTemplates>> // eslint-disable-line
+): Record<string, RouterT> => {
     return Object.keys(routers).reduce((acc, routerName) => {
         const r = routers[routerName];
 
@@ -66,8 +68,8 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
 
             const link = r.link(action);
             return (
-                <a href={undefined} title={link}>
-                    <a onClick={() => r[action]()}>{children}</a>
+                <a href={undefined} title={link} onClick={() => r[action]()}>
+                    {children}
                 </a>
             );
         };
