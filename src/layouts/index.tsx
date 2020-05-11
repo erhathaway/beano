@@ -4,7 +4,7 @@ import {AnimationCtx, createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
-import Animate from '../animate';
+import Animate, {AnimationResult} from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 import predicates from '../predicates';
 
@@ -56,6 +56,13 @@ const manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unk
 const routers = manager.routers;
 const routerComponents = createRouterComponents(routers as any);
 
+const MoonScene = routerComponents['moon'];
+const EngineFeature = routerComponents['engine'];
+const RocketFeature = routerComponents['rocket'];
+const SunScene = routerComponents['sun'];
+const RouterPrimitives = routerComponents['router-primitives'];
+const Native = routerComponents['native'];
+
 const RootLayoutContainer = styled.div`
     display: flex;
     flex-direction: column;
@@ -65,15 +72,6 @@ const RootLayoutContainer = styled.div`
     margin: 40px;
     overflow: hidden;
 `;
-
-const MoonScene = routerComponents['moon'];
-const EngineFeature = routerComponents['engine'];
-
-const RocketFeature = routerComponents['rocket'];
-
-const SunScene = routerComponents['sun'];
-const RouterPrimitives = routerComponents['router-primitives'];
-const Native = routerComponents['native'];
 
 const Button = styled.div`
     display: flex;
@@ -131,18 +129,17 @@ const AnimateableSun = styled.div`
     background-color: yellow;
 `;
 
-const animateJustShown = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateJustShown = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
         duration: 550
     });
-};
 
-const animateJustHidden = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateJustHidden = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [200, 400],
         translateY: [0, 500],
@@ -151,20 +148,18 @@ const animateJustHidden = (ctx: AnimationCtx): AnimationResult => {
         easing: 'linear',
         duration: 5000
     });
-};
 
-const animateNativeJustShown = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateNativeJustShown = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 200],
         opacity: [0, 1],
         scale: [0, 1],
         duration: 850
     });
-};
 
-const animateNativeJustHidden = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateNativeJustHidden = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [200, 400],
         translateY: [0, 500],
@@ -173,26 +168,23 @@ const animateNativeJustHidden = (ctx: AnimationCtx): AnimationResult => {
         easing: 'linear',
         duration: 800
     });
-};
 
-const animateRocketJustShown = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateRocketJustShown = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: ['0px', '100px'],
         duration: 500
     });
-};
 
-const animateEngineJustShown = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateEngineJustShown = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: ['0px', '100px'],
         duration: 200
     });
-};
 
-const animateRocketJustHidden = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateRocketJustHidden = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, 400],
         translateY: [0, 400],
@@ -201,10 +193,9 @@ const animateRocketJustHidden = (ctx: AnimationCtx): AnimationResult => {
         easing: 'linear',
         duration: 300
     });
-};
 
-const animateSceneIn = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateSceneIn = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: ['-300%', 0],
         scale: [0.5, 1],
@@ -212,17 +203,15 @@ const animateSceneIn = (ctx: AnimationCtx): AnimationResult => {
         duration: 400,
         easing: 'linear'
     });
-};
 
-const animateSceneOut = (ctx: AnimationCtx): AnimationResult => {
-    return anime({
+const animateSceneOut = (ctx: AnimationCtx): AnimationResult =>
+    anime({
         targets: `#${ctx.node.id}`,
         translateX: [0, '300%'],
         position: 'fixed',
         scale: [1, 0],
         duration: 5000
     });
-};
 
 const {isJustHidden, isJustShown} = statePredicates;
 
@@ -356,8 +345,8 @@ const Root = (): JSX.Element => {
                                 unMountOnHide
                                 exitAfterChildFinish={['1']}
                                 when={[
-                                    [isJustShown as any, animateJustShown],
-                                    [isJustHidden as any, animateJustHidden]
+                                    [isJustShown, animateJustShown],
+                                    [isJustHidden, animateJustHidden]
                                 ]}
                             >
                                 <AnimateableMoon>
