@@ -4,9 +4,10 @@ import {createRouterComponents} from '../router';
 import {statePredicates} from 'router-primitives';
 import anime from 'animejs';
 import Animateable from '../animateable';
-import Animate, {AnimationCtx, AnimationResult} from '../animate';
+import Animate from '../animate';
 import {Manager, IRouterDeclaration, IRouterTemplates} from 'router-primitives';
 import predicates from '../predicates';
+import {AnimationCtx, AnimationResult} from '../types';
 
 const routerDeclaration: IRouterDeclaration<{}> = {
     name: 'root',
@@ -329,8 +330,8 @@ const Root = (): JSX.Element => {
                 unMountOnHide
                 exitAfterChildFinish={['1']}
                 when={[
-                    [isJustShown as any, animateSceneIn],
-                    [isJustHidden as any, animateSceneOut]
+                    [isJustShown, animateSceneIn],
+                    [isJustHidden, animateSceneOut]
                 ]}
             >
                 <Animateable>

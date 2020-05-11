@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const pendingPromise = Promise.race.bind(Promise, []);
 
 export default class AnimationControl {
-    // eslint-disable-next-line
     _cancel: undefined | (() => any) = undefined;
-    // eslint-disable-next-line
     _onFinishPromise: undefined | Promise<any> = undefined;
-    // eslint-disable-next-line
     _onFinishAction: undefined | (() => any) = undefined;
 
     cancel = (): void => {
@@ -17,7 +16,6 @@ export default class AnimationControl {
         }
     };
 
-    // eslint-disable-next-line
     createOnFinishPromise = (animationFinishPromise: Promise<any>): Promise<any> => {
         console.log('** CREATING ON FINISH');
         let hasCanceled = false;

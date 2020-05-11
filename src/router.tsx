@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 
 import React, {useState, useEffect} from 'react';
-
 import {IOutputLocation, IManager} from 'router-primitives';
-import {AnimationBinding} from './types';
-import BaseAnimate, {When} from './animate';
+
+import {AnimationBinding, When} from './types';
+import BaseAnimate from './animate';
 
 interface Props {
     children?: React.ReactNode;
@@ -17,7 +17,7 @@ interface LinkProps {
 
 interface RouterAnimateProps {
     when?: When;
-    children?: any;
+    children?: React.ReactElement;
     unMountOnHide?: boolean;
     unMountOnShow?: boolean;
     id?: string;
@@ -42,7 +42,7 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
             const [state, setState] = useState(r.state);
             useEffect(() => {
                 if (r && r.subscribe) {
-                    r.subscribe(all => setState(all.current) as any);
+                    r.subscribe(all => setState(all.current));
                 }
                 return;
             }, ['startup']);
@@ -53,6 +53,7 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
             /**
              * Subscribe to all state changes
              */
+            // eslint-disable-next-line
             const [_, setRouterState] = useState<IOutputLocation>();
             useEffect(() => {
                 if (r.manager.serializedStateStore) {
@@ -92,7 +93,6 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
             });
 
             useEffect(() => {
-                // console.log(r.name, 'new router state');
                 if (r && r.subscribe) {
                     r.subscribe(all => {
                         const state = all.current;
@@ -111,7 +111,7 @@ export const createRouterComponents = (routers: IManager['routers']): Record<str
                     name={r.name}
                     visible={_triggerState.visible}
                     triggerState={_triggerState}
-                    predicateState={r as any}
+                    predicateState={r}
                     when={when}
                     unMountOnHide={unMountOnHide}
                     id={id}

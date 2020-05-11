@@ -2,172 +2,17 @@ import React, {useState, useEffect} from 'react';
 import {useId} from 'react-id-generator';
 
 import AnimationControl from './animate_control';
-import {AnimationState, AnimationBinding, NotifyParentOfState} from './types';
-
-// type Predicate<T> = (predicateState: T) => boolean;
-export type Predicate = <PS extends any, TS extends any>(
-    predicateState: PS,
-    {triggerState, visible}: {triggerState: TS; visible: boolean}
-) => boolean;
-
-export type Predicates = Array<Predicate>;
-
-export type AnimationCtx = {
-    node: HTMLElement;
-    // classNames: string[];
-    // finish: Array<Promise<any>>;
-};
-
-export interface IAnimationResult {
-    finished: Promise<any>;
-}
-
-export type AnimationRun = {hasRun: boolean; ctx: AnimationCtx; animationResult: AnimationResult};
-
-export type AnimationResult = IAnimationResult | null;
-
-type PredicateAnimation = (ctx: AnimationCtx) => AnimationResult;
-
-export type When = Array<[Predicates | Predicate, PredicateAnimation]>;
-interface AnimateProps<PS, TS> {
-    name: string; // TODO make me optional in the future
-    visible: boolean;
-    triggerState?: TS;
-    predicateState?: PS;
-
-    when?: When;
-    children?: any;
-
-    unMountOnHide?: boolean;
-    unMountOnShow?: boolean;
-
-    id?: string;
-
-    animationBinding?: AnimationBinding;
-    enterAfterParentStart?: boolean;
-    enterAfterParentFinish?: boolean;
-    exitAfterChildStart?: string[];
-    exitAfterChildFinish?: string[];
-}
-
-type CurrentState<TriggerState> = {
-    actionCount: number; // The current action count. Each layout change counts as an action
-    currentState: AnimationState; // 'restarting', 'initalizing', 'running', 'finished', 'unmounted'
-    hasRunForCycle: boolean; // Flag tracking whether this component has an animation is in progress for this action count
-    triggerState: TriggerState;
-    childStates: {
-        // The state of each child
-        [childId: string]: AnimationState | undefined;
-    };
-    visible: boolean;
-};
-
-const setStateForNewAction = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>,
-    triggerState: TriggerState,
-    visible: boolean
-): void => {
-    console.log('Setting new state for new action!!!!');
-    setEState(current => {
-        // increment action count
-        const actionCount = current.actionCount + 1;
-        // either cancel the existing animation ('restarting') or prep for new one ('initializing')
-        const currentState = current.currentState === 'running' ? 'restarting' : 'initalizing';
-        // set the flag recording if an animation has taken place to false
-        const hasRunForCycle = false;
-        // copy over unmounted child states b/c they wont be in play anymore
-        // otherwise set child states to undefined for this action
-        const childStates = Object.keys(current.childStates).reduce((acc, childId) => {
-            const currentChildState = current.childStates[childId];
-            if (currentChildState === 'unmounted') {
-                return {
-                    ...acc,
-                    [childId]: 'unmounted' as AnimationState
-                };
-            } else {
-                return {
-                    ...acc,
-                    [childId]: undefined
-                };
-            }
-        }, {} as {[childId: string]: AnimationState | undefined});
-
-        return {
-            actionCount,
-            currentState,
-            triggerState,
-            hasRunForCycle,
-            childStates,
-            visible
-        };
-    });
-};
-
-const setStateForFinishedAction = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        currentState: current.currentState === 'running' ? 'finished' : current.currentState
-    }));
-};
-
-const setHasRunForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        hasRunForCycle: true
-    }));
-};
-
-const setCurrentStateToRunningForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        currentState: 'running'
-    }));
-};
-
-const setCurrentStateToFinishedForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        currentState: 'finished'
-    }));
-};
-
-const setCurrentStateToUnmountedForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        currentState: 'unmounted'
-    }));
-};
-
-const setCurrentStateToInitializingForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): void => {
-    setEState(current => ({
-        ...current,
-        currentState: 'initalizing'
-    }));
-};
-
-const setChildStateForActionCount = <TriggerState extends any>(
-    setEState: React.Dispatch<React.SetStateAction<CurrentState<TriggerState>>>
-): NotifyParentOfState => (id, state) => {
-    setEState(current => ({
-        ...current,
-        childStates: {
-            ...current.childStates,
-            [id]: state
-        }
-    }));
-};
+import {AnimationState, AnimateProps, AnimationRun, CurrentState} from './types';
+import {
+    setStateForFinishedAction,
+    setStateForNewAction,
+    setCurrentStateToUnmountedForActionCount,
+    setHasRunForActionCount,
+    setCurrentStateToRunningForActionCount,
+    setCurrentStateToFinishedForActionCount,
+    setCurrentStateToInitializingForActionCount,
+    setChildStateForActionCount
+} from './animation_state_transforms';
 
 const childrenMatch = (
     childrenOfInterest: string[],
@@ -186,7 +31,7 @@ const childrenMatch = (
     }, true as boolean);
 };
 
-const Animate = <PredicateState extends any, TriggerState>({
+const Animate = <PredicateState, TriggerState>({
     name,
 
     visible: visibleProp,
@@ -466,7 +311,7 @@ const Animate = <PredicateState extends any, TriggerState>({
         return null;
     }
 
-    const setRefOfAnimateable = (ref: HTMLElement) => {
+    const setRefOfAnimateable = (ref: HTMLElement): void => {
         // TODO: for some reason null is returned whenever this component rerenders.
         // Possibly due to the cloneElement behavior.
         // This prevents knowing about child unmount events, which isn't a big deal
@@ -478,7 +323,7 @@ const Animate = <PredicateState extends any, TriggerState>({
         setRef(ref);
     };
     const realChildren = children
-        ? React.cloneElement(children as any, {
+        ? React.cloneElement(children, {
               ref: setRefOfAnimateable,
               id: uuid,
               animationBinding: {
