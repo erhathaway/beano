@@ -55,7 +55,7 @@ const manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unk
 // }
 
 const routers = manager.routers;
-const routerComponents = createRouterComponents(routers as any);
+const routerComponents = createRouterComponents(routers);
 
 const MoonScene = routerComponents['moon'];
 const EngineFeature = routerComponents['engine'];

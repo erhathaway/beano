@@ -8,11 +8,10 @@ export default class AnimationControl {
     _onFinishAction: undefined | (() => any) = undefined;
 
     cancel = (): void => {
-        console.log('** ATTEMPTING CANCEL', this._cancel);
         try {
             this._cancel && this._cancel();
         } catch (e) {
-            console.log('**', e);
+            console.log('Error canceling animation', e);
         }
     };
 
@@ -21,8 +20,6 @@ export default class AnimationControl {
         let hasCanceled = false;
         this._onFinishPromise = new Promise((fulfill, _reject) => {
             this._cancel = () => {
-                // console.log(r.name, ': OHHHHHH yeah CANCELING');
-
                 fulfill(pendingPromise());
                 console.log('** FULLFILLING CANCEL');
                 hasCanceled = true;
