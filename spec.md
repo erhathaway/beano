@@ -1,5 +1,7 @@
 ```
 <Router.Animate
+    waitForParent // dont start this animation until parent is started // will hold off on mounting if haven't mounted yet
+    parentOffset={200} // ms - time to offset from start of parent animation if any // will hold off on mounting if havent mounted yet
     onChange={when(isVisible, (id, finished) => anime({ targets: `#${id}`, translateX: 200 }).finished )}
 >
     <Animateable>

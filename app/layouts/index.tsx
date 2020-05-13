@@ -1,13 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
-import {createRouterComponents} from '../router';
+import {createRouterComponents} from '../../src';
 import {Manager, IRouterDeclaration, IRouterTemplates, statePredicates} from 'router-primitives';
 import anime from 'animejs';
 
-import Animateable from '../animateable';
-import Animate from '../animate';
-import predicates from '../predicates';
-import {AnimationCtx, AnimationResult} from '../types';
+import {
+    Animatable,
+    Animate,
+    predicates,
+    AnimationCtx,
+    AnimationResult
+} from '../../src_animated_components';
 
 const routerDeclaration: IRouterDeclaration<{}> = {
     name: 'root',
@@ -94,7 +97,7 @@ const RouterPrimitiveAnimationsControl = styled.div`
     display: flex;
 `;
 
-const AnimateableMoon = styled(Animateable)`
+const AnimatableMoon = styled(Animatable)`
     position: relative;
     display: flex;
     height: 200px
@@ -103,7 +106,7 @@ const AnimateableMoon = styled(Animateable)`
     background-color: blue;
 `;
 
-const AnimateableNative = styled(Animateable)`
+const AnimatableNative = styled(Animatable)`
     position: relative;
     display: flex;
     height: 200px
@@ -112,15 +115,15 @@ const AnimateableNative = styled(Animateable)`
     background-color: yellow;
 `;
 
-const AnimateableRocket = styled(Animateable)`
+const AnimatableRocket = styled(Animatable)`
     position: absolute;
     width: 200;
     background-color: green;
 `;
 
-const AnimateableNativeContainer = styled(Animateable)``;
+const AnimatableNativeContainer = styled(Animatable)``;
 
-const AnimateableSun = styled.div`
+const AnimatableSun = styled.div`
     position: absolute;
     height: 100;
     width: 200;
@@ -244,7 +247,7 @@ const Root = (): JSX.Element => {
                     [isJustHidden, animateSceneOut]
                 ]}
             >
-                <AnimateableNativeContainer>
+                <AnimatableNativeContainer>
                     {animationBinding => (
                         <>
                             <VisibleToggle>
@@ -279,7 +282,7 @@ const Root = (): JSX.Element => {
                                                         ]
                                                     ]}
                                                 >
-                                                    <AnimateableNative>
+                                                    <AnimatableNative>
                                                         {nativeAnimationBinding => (
                                                             <div>
                                                                 {'engine'}
@@ -303,18 +306,18 @@ const Root = (): JSX.Element => {
                                                                         ]
                                                                     ]}
                                                                 >
-                                                                    <AnimateableNative>
+                                                                    <AnimatableNative>
                                                                         {() => (
                                                                             <div>
                                                                                 {'engine'}
                                                                                 <div>{'world'}</div>
                                                                             </div>
                                                                         )}
-                                                                    </AnimateableNative>
+                                                                    </AnimatableNative>
                                                                 </Animate>
                                                             </div>
                                                         )}
-                                                    </AnimateableNative>
+                                                    </AnimatableNative>
                                                 </Animate>
                                             </>
                                         )}
@@ -324,7 +327,7 @@ const Root = (): JSX.Element => {
                             {'hello'}
                         </>
                     )}
-                </AnimateableNativeContainer>
+                </AnimatableNativeContainer>
             </Native.Animate>
             <RouterPrimitives.Animate
                 unMountOnHide
@@ -334,7 +337,7 @@ const Root = (): JSX.Element => {
                     [isJustHidden, animateSceneOut]
                 ]}
             >
-                <Animateable>
+                <Animatable>
                     {routerPrimitivesAnimationBinding => (
                         <>
                             <MoonScene.Animate
@@ -347,7 +350,7 @@ const Root = (): JSX.Element => {
                                     [isJustHidden, animateJustHidden]
                                 ]}
                             >
-                                <AnimateableMoon>
+                                <AnimatableMoon>
                                     {animationBinding => (
                                         <>
                                             {'moon'}
@@ -374,7 +377,7 @@ const Root = (): JSX.Element => {
                                                     [isJustHidden, animateRocketJustHidden]
                                                 ]}
                                             >
-                                                <AnimateableRocket>
+                                                <AnimatableRocket>
                                                     {rocketAnimationBinding => (
                                                         <>
                                                             {'rocket'}
@@ -401,7 +404,7 @@ const Root = (): JSX.Element => {
                                                                     ]
                                                                 ]}
                                                             >
-                                                                <AnimateableRocket>
+                                                                <AnimatableRocket>
                                                                     {() => (
                                                                         <>
                                                                             {'engine'}
@@ -414,15 +417,15 @@ const Root = (): JSX.Element => {
                                                                             </EngineFeature.Link>
                                                                         </>
                                                                     )}
-                                                                </AnimateableRocket>
+                                                                </AnimatableRocket>
                                                             </EngineFeature.Animate>
                                                         </>
                                                     )}
-                                                </AnimateableRocket>
+                                                </AnimatableRocket>
                                             </RocketFeature.Animate>
                                         </>
                                     )}
-                                </AnimateableMoon>
+                                </AnimatableMoon>
                             </MoonScene.Animate>
                             <SunScene.Animate
                                 unMountOnHide
@@ -431,7 +434,7 @@ const Root = (): JSX.Element => {
                                     [isJustHidden, animateJustHidden]
                                 ]}
                             >
-                                <AnimateableSun>
+                                <AnimatableSun>
                                     {'sun'}
                                     <SunScene.Link action={'hide'}>
                                         <Button>{'Hide Sun'}</Button>
@@ -439,7 +442,7 @@ const Root = (): JSX.Element => {
                                     <MoonScene.Link action={'show'}>
                                         <Button>{'Show Moon'}</Button>
                                     </MoonScene.Link>
-                                </AnimateableSun>
+                                </AnimatableSun>
                             </SunScene.Animate>
                             {'main'}
                             <RouterPrimitiveAnimationsControl>
@@ -452,7 +455,7 @@ const Root = (): JSX.Element => {
                             </RouterPrimitiveAnimationsControl>
                         </>
                     )}
-                </Animateable>
+                </Animatable>
             </RouterPrimitives.Animate>
         </RootLayoutContainer>
     );
