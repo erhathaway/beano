@@ -5,13 +5,15 @@ import pkg from './package.json';
 import {eslint} from 'rollup-plugin-eslint';
 import externalGlobals from 'rollup-plugin-external-globals';
 
+import react from 'react';
+
 const dependencies = Object.keys({
     ...pkg.dependencies,
     ...pkg.peerDependencies
 });
 
 export default {
-    input: 'src/index.ts',
+    input: 'src/index.tsx',
     output: [
         {
             file: pkg.main,
@@ -33,7 +35,10 @@ export default {
             }
         }),
         commonjs({
-            include: 'node_modules/**'
+            include: 'node_modules/**',
+            namedExports: {
+                react: Object.keys(react)
+            }
         }),
         externalGlobals({
             perf_hooks: 'window' // eslint-disable-line

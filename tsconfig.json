@@ -6,7 +6,7 @@
         "esModuleInterop": true,
         "jsx": "react",
         "outDir": "./dist/",
-        "module": "commonjs",
+        "module": "ESNext",
         "moduleResolution": "node",
         "noImplicitAny": true,
         "noUnusedLocals": false,
