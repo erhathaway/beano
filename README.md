@@ -1,48 +1,119 @@
-# react-typescript-parcel-boilerplate
-[![Actions Status](https://github.com/erhathaway/react-typescript-parcel-boilerplate/workflows/Continous%20Integration/badge.svg)](https://github.com/erhathaway/react-typescript-parcel-boilerplate/actions)
+# router-primitives-react
 
-![](https://api.dependabot.com/badges/status?host=github&repo=erhathaway/react-typescript-parcel-boilerplate)
+Bindings for [router-primitives](https://github.com/erhathaway/router-primitives) to React.
 
-An opinionated React,Typescript, and Parcel boilerplate
-
-...with MobX, Styled-Components, and AnimeJS along for the ride
-
-# About
-
--   Styling is handled by [Styled-Components](https://www.styled-components.com/)
--   Animations are handled by [AnimeJS](https://animejs.com/)
--   Business logic is handled by [MobX](https://mobx.js.org/README.html)
--   Continuous Integration (CI) is done via [GitHub Actions](https://github.com/features/actions)
--   Testing supports Typescript and uses React Test Renderer
-    -   In the example app, tests are colocated next to the file they test and snapshots are run inline for easier reading
--   ESLint is configured to work with Typescript, Prettier, and Jest
--   Husky is added for git-hooks. The pre-commit hook checks similar things as the CI
+Router Primitives is a layout primitives paradigm for application routing. Instead of focusing on pattern matching path names and query params, you describe the layout of your application in terms of router primitives. Primitives are composable and provide a simple declarative API to control routing actions and add complex animations.
 
 # Usage
 
-1. Edit the `package.json` file and specify project attributes. All of the following should be customized:
+## 1. Declare the layout of your app in terms of router primitives
 
-    - `name`
-    - `version`
-    - `description`
-    - `repository`
-    - `author`
-    - `license`
-    - `bugs`
-    - `homepage`
+```typescript
+import {IRouterDeclaration, AllTemplates} from 'router-primitives';
 
-2. Edit the `.github/CODEOWNERS` file and add your github user name
+const routerDeclaration: IRouterDeclaration<AllTemplates> = {
+    name: 'root',
+    children: {
+        scene: [
+            {
+                name: 'user',
+                children: {
+                    data: [{name: 'userId', isPathRouter: true}]
+                }
+            },
+            {name: 'home', defaultAction: ['show']},
+            {
+                name: 'options',
+                children: {
+                    scene: [{name: 'appOptions', defaultAction: ['show']}, {name: 'userOptions'}]
+                }
+            }
+        ],
+        features: [{name: 'sideNav', routeKey: 'nav'}]
+    }
+};
+```
 
-3. Edit the Continuous Integration badge in the `README.md`. [See the github docs on action badges](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/configuring-a-workflow#adding-a-workflow-status-badge-to-your-repository)
-4. Edit (or delete) the Dependabot badge in the `README.md`. Use `<username>/<reponame>` syntax
-5. Install the dependencies `npm install` or `yarn install`
-6. Run the example app `npm run start`
+## 2. Instantiate the router manager and generate Router Primitive React components
 
-# Architecture
+```typescript
+const manager = new Manager({routerDeclaration}) as Manager<IRouterTemplates<unknown>>;
+const routers = manager.routers;
+const routerComponents = createRouterComponents(routers);
 
-The example app architecture follows an MVC paradigm. The `M` = `State`, `V` = `Features`, and the `C` = `Layouts`. Thus, you compose a layout of features and interplate state into those features. In my opinion, this helps separate the view layer from the business layer and makes it easy to do feature development and maintance on the code base.
+const Root = routerComponents['root'];
+const UserScene = routerComponents['user'];
+const UserIdData = routerComponents['userId'];
+const HomeScene = routerComponents['home'];
+const OptionsScene = routerComponents['options'];
+const AppOptionsScene = routerComponents['appOptions'];
+const UserOptionsScene = routerComponents['userOptionsScene'];
+const SideNavFeature = routerComponents['sideNav'];
+```
 
--   `src/layouts`: The app is organized around `layouts`. `Layouts` describe how `Features` visually appear with respect to one another. Interactions among `Features`, like animations, routing, and viewport adjustments should be handled at the layout level.
--   `src/features` `Features` are isolated units. `State` is bound to `Features` via the React Context API and MobX. `Features` should only be a view layer - all business logic should be interpolated into the view layer... not defined in the view layer!.
--   `src/state`: Business logic is stored in the `state` folder. This logic is written in a functional reactive paradigm - hence the usage of MobX.
--   `src/context`: The place where state is bound to the Context API. Business logic is instantiated here.
+## 3. Use the components in your app
+
+```typescript
+import {Animatable} from 'animated-components';
+import anime from 'animejs';
+import {predicates} from 'router-primitives';
+
+const app = () => (
+    <Root>
+        <UserScene>
+            <UserIdData>{`The current user id is: ${routers.userId.state.data}`}</UserIdData>
+        </UserScene>
+        <HomeScene>{'Welcome to the app'}</HomeScene>
+        <OptionsScene>
+            <AppOptions.Link action={'show'}>
+                <div>{`Show App Options`}</div>
+            </AppOptions.Link>
+            <UserOptions.Link action={'show'}>
+                <div>{`Show User Options`}</div>
+            </UserOptions.Link>
+            <AppOptions>{'All your app option components'}</AppOptions>
+            <UserOptions>{'All your user option components'}</UserOptions>
+        </OptionsScene>
+        <SideNav.Animate
+            unMountOnHide
+            when={[
+                [
+                    predicates.isJustShown,
+                    ({node}) => anime({targets: `#${node.id}`, translateX: [0, 200]})
+                ][
+                    (predicates.isJustHidden,
+                    ({node}) => anime({targets: `#${node.id}`, translateX: [200, 0]}))
+                ]
+            ]}
+        >
+            <Animatable>
+                <UserScene.Link action={'show'}>
+                    <div>{`Show Home Scene`}</div>
+                </UserScene.Link>
+                <HomeScene.Link action={'show'}>
+                    <div>{`Show Home Scene`}</div>
+                </HomeScene.Link>
+                <OptionsScene.Link action={'show'}>
+                    <div>{`Show Options`}</div>
+                </OptionsScene.Link>
+            </Animatable>
+        </SideNav.Animate>
+        <SideNav
+            uncontrolled
+        >
+            {({state: {visible}}) =>
+                visible ? (
+                    <SideNav.Link action={'hide'}>
+                        <div>{`Hide Side Nav`}</div>
+                    </SideNav.Link>
+                ) : (
+                    <SideNav.Link action={'show'}>
+                        <div>{`Show Side Nav`}</div>
+                    </SideNav.Link>
+                )
+            }
+        </SideNav uncontrolled>
+
+    </Root>
+);
+```
