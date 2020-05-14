@@ -47,6 +47,7 @@ export type AnimationResult = IAnimationResult | null;
 export type PredicateAnimation = (ctx: AnimationCtx) => AnimationResult;
 
 export type When = Array<[Predicates | Predicate, PredicateAnimation]>;
+
 export interface AnimateProps<PS, TS> {
     name: string; // TODO make me optional in the future
     visible: boolean;
@@ -66,4 +67,11 @@ export interface AnimateProps<PS, TS> {
     enterAfterParentFinish?: boolean;
     exitAfterChildStart?: string[];
     exitAfterChildFinish?: string[];
+}
+
+export interface AnimateableProps {
+    id?: string;
+    className?: string;
+    animationBinding?: AnimationBinding;
+    children?: <P, T extends string>(animationBinding: AnimationBinding | undefined) => any; //React.ReactElement<P, T>;
 }

@@ -249,83 +249,74 @@ const Root = (): JSX.Element => {
             >
                 <AnimatableNativeContainer>
                     {animationBinding => (
-                        <>
-                            <VisibleToggle>
-                                {({isVisible: isVisibleOne, toggleVisible: toggleVisibleOne}) => (
-                                    <VisibleToggle>
-                                        {({
-                                            isVisible: isVisibleTwo,
-                                            toggleVisible: toggleVisibleTwo
-                                        }) => (
-                                            <>
-                                                <Button
-                                                    onClick={toggleVisibleOne}
-                                                >{`toggle native - ${isVisibleOne}`}</Button>
+                        <VisibleToggle>
+                            {({isVisible: isVisibleOne, toggleVisible: toggleVisibleOne}) => (
+                                <VisibleToggle>
+                                    {({
+                                        isVisible: isVisibleTwo,
+                                        toggleVisible: toggleVisibleTwo
+                                    }) => (
+                                        <>
+                                            <Button
+                                                onClick={toggleVisibleOne}
+                                            >{`toggle native - ${isVisibleOne}`}</Button>
 
-                                                <Button
-                                                    onClick={toggleVisibleTwo}
-                                                >{`toggle inside - ${isVisibleTwo}`}</Button>
-                                                <Animate
-                                                    enterAfterParentFinish
-                                                    animationBinding={animationBinding}
-                                                    name={'native'}
-                                                    visible={isVisibleOne}
-                                                    exitAfterChildFinish={['inside']}
-                                                    when={[
-                                                        [
-                                                            predicates.isVisible,
-                                                            animateNativeJustShown
-                                                        ],
-                                                        [
-                                                            predicates.isHidden,
-                                                            animateNativeJustHidden
-                                                        ]
-                                                    ]}
-                                                >
-                                                    <AnimatableNative>
-                                                        {nativeAnimationBinding => (
-                                                            <div>
-                                                                {'engine'}
-                                                                <div>{'world'}</div>
-                                                                <Animate
-                                                                    id={'inside'}
-                                                                    name={'inside'}
-                                                                    visible={isVisibleTwo}
-                                                                    enterAfterParentFinish
-                                                                    animationBinding={
-                                                                        nativeAnimationBinding
-                                                                    }
-                                                                    when={[
-                                                                        [
-                                                                            predicates.isVisible,
-                                                                            animateNativeJustShown
-                                                                        ],
-                                                                        [
-                                                                            predicates.isHidden,
-                                                                            animateNativeJustHidden
-                                                                        ]
-                                                                    ]}
-                                                                >
-                                                                    <AnimatableNative>
-                                                                        {() => (
-                                                                            <div>
-                                                                                {'engine'}
-                                                                                <div>{'world'}</div>
-                                                                            </div>
-                                                                        )}
-                                                                    </AnimatableNative>
-                                                                </Animate>
-                                                            </div>
-                                                        )}
-                                                    </AnimatableNative>
-                                                </Animate>
-                                            </>
-                                        )}
-                                    </VisibleToggle>
-                                )}
-                            </VisibleToggle>
-                            {'hello'}
-                        </>
+                                            <Button
+                                                onClick={toggleVisibleTwo}
+                                            >{`toggle inside - ${isVisibleTwo}`}</Button>
+                                            <Animate
+                                                enterAfterParentFinish
+                                                animationBinding={animationBinding}
+                                                name={'native'}
+                                                visible={isVisibleOne}
+                                                exitAfterChildFinish={['inside']}
+                                                when={[
+                                                    [predicates.isVisible, animateNativeJustShown],
+                                                    [predicates.isHidden, animateNativeJustHidden]
+                                                ]}
+                                            >
+                                                <AnimatableNative>
+                                                    {nativeAnimationBinding => (
+                                                        <div>
+                                                            {'engine'}
+                                                            <div>{'world'}</div>
+                                                            <Animate
+                                                                id={'inside'}
+                                                                name={'inside'}
+                                                                visible={isVisibleTwo}
+                                                                enterAfterParentFinish
+                                                                animationBinding={
+                                                                    nativeAnimationBinding
+                                                                }
+                                                                when={[
+                                                                    [
+                                                                        predicates.isVisible,
+                                                                        animateNativeJustShown
+                                                                    ],
+                                                                    [
+                                                                        predicates.isHidden,
+                                                                        animateNativeJustHidden
+                                                                    ]
+                                                                ]}
+                                                            >
+                                                                <AnimatableNative>
+                                                                    {() => (
+                                                                        <div>
+                                                                            {'engine'}
+                                                                            <div>{'world'}</div>
+                                                                        </div>
+                                                                    )}
+                                                                </AnimatableNative>
+                                                            </Animate>
+                                                        </div>
+                                                    )}
+                                                </AnimatableNative>
+                                            </Animate>
+                                        </>
+                                    )}
+                                </VisibleToggle>
+                            )}
+                        </VisibleToggle>
                     )}
                 </AnimatableNativeContainer>
             </Native.Animate>

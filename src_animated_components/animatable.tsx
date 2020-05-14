@@ -1,14 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import React from 'react';
-import {AnimationBinding} from './types';
-
-interface AnimateableProps {
-    id?: string;
-    className?: string;
-    animationBinding?: AnimationBinding;
-    children?: (animationBinding: AnimationBinding | undefined) => React.ReactElement;
-}
+import {AnimateableProps} from './types';
 
 const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function animateable(
     props,
@@ -22,6 +15,7 @@ const Animateable = React.forwardRef<HTMLDivElement, AnimateableProps>(function 
             'No animation binding prop found. This usually means this component (the animateable component) is not directly mounted under an animation component'
         );
     }
+
     return (
         <div id={props.id} ref={ref} className={props.className}>
             {props.children && props.animationBinding
