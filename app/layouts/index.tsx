@@ -1,16 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import {createRouterComponents} from '../../src';
+import {createRouterComponents} from '../../src_router_primitives_react';
 import {Manager, IRouterDeclaration, IRouterTemplates, statePredicates} from 'router-primitives';
 import anime from 'animejs';
 
-import {
-    Animatable,
-    Animate,
-    predicates,
-    AnimationCtx,
-    AnimationResult
-} from '../../src_animated_components';
+import {Animatable, Animate, predicates, AnimationCtx, AnimationResult} from '../../src';
 
 const routerDeclaration: IRouterDeclaration<{}> = {
     name: 'root',
