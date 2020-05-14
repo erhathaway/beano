@@ -13,7 +13,7 @@ const dependencies = Object.keys({
 });
 
 export default {
-    input: 'src/index.tsx',
+    input: 'src/index.ts',
     output: [
         {
             file: pkg.browser,

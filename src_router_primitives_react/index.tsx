@@ -3,7 +3,7 @@
 import React, {useState, useEffect} from 'react';
 import {IOutputLocation, RouterInstance, IRouterTemplates} from 'router-primitives';
 
-import {Animate as BaseAnimate, AnimationBinding, When} from '../src_animated_components';
+import {Animate as BaseAnimate, AnimationBinding, When} from '../src';
 
 interface Props {
     children?: React.ReactNode;

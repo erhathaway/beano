@@ -1,7 +1,7 @@
 {
-    "name": "router-primitives-react",
+    "name": "animated-components",
     "version": "0.1.0",
-    "description": "React bindings for router-primitives",
+    "description": "Animation-library agnostic control for you animations. Build complex multi-component animations with ease.",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
     "browser": "./dist/index.js",
@@ -24,14 +24,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/erhathaway/router-primitives-react.git"
+        "url": "git+https://github.com/erhathaway/animated-components.git"
     },
     "author": "Ethan Hathaway",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/erhathaway/router-primitives-react/issues"
+        "url": "https://github.com/erhathaway/animated-components/issues"
     },
-    "homepage": "https://github.com/erhathaway/router-primitives-react#readme",
+    "homepage": "https://github.com/erhathaway/animated-components#readme",
     "devDependencies": {
         "@rollup/plugin-commonjs": "^11.0.2",
         "@rollup/plugin-node-resolve": "^7.1.1",
@@ -57,6 +57,7 @@
         "react-id-generator": "^3.0.0",
         "react-test-renderer": "^16.13.0",
         "rimraf": "^3.0.2",
+        "router-primitives": "^1.0.0-beta.6",
         "rollup": "^2.0.6",
         "rollup-plugin-eslint": "^7.0.0",
         "rollup-plugin-external-globals": "^0.5.0",
@@ -68,7 +69,6 @@
     },
     "dependencies": {
         "react": "^16.13.1",
-        "react-dom": "^16.13.0",
-        "router-primitives": "^1.0.0-beta.6"
+        "react-dom": "^16.13.0"
     }
 }
