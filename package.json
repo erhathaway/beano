@@ -4,6 +4,7 @@
     "description": "React bindings for router-primitives",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
+    "browser": "./dist/index.js",
     "types": "./dist/src/index.d.ts",
     "files": [
         "dist"
@@ -53,8 +54,6 @@
         "mobx-react": "^6.2.2",
         "parcel-bundler": "^1.12.3",
         "prettier": "^1.18.2",
-        "react": "^16.13.1",
-        "react-dom": "^16.13.0",
         "react-id-generator": "^3.0.0",
         "react-test-renderer": "^16.13.0",
         "rimraf": "^3.0.2",
@@ -68,6 +67,8 @@
         "typescript": "^3.9.0-beta"
     },
     "dependencies": {
+        "react": "^16.13.1",
+        "react-dom": "^16.13.0",
         "router-primitives": "^1.0.0-beta.6"
     }
 }

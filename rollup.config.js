@@ -16,6 +16,11 @@ export default {
     input: 'src/index.tsx',
     output: [
         {
+            file: pkg.browser,
+            format: 'umd',
+            name: pkg.name
+        },
+        {
             file: pkg.main,
             format: 'cjs'
         },
