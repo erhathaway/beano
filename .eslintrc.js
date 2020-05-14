@@ -26,12 +26,14 @@ module.exports = {
         'jest/no-identical-title': 'error',
         'jest/prefer-to-have-length': 'warn',
         'jest/valid-expect': 'error',
+        '@typescript-eslint/interface-name-prefix': 0,
         '@typescript-eslint/explicit-function-return-type': [
-            'error',
+            'warn',
             {
                 allowExpressions: true
             }
-        ]
+        ],
+        'react/prop-types': 'warn'
     },
     settings: {
         react: {
