@@ -13,6 +13,7 @@ import {
     setCurrentStateToInitializingForActionCount,
     setChildStateForActionCount
 } from './animation_state_transforms';
+import {createLogger, browserTransport} from './logger';
 
 const childrenMatch = (
     childrenOfInterest: string[],
@@ -30,6 +31,8 @@ const childrenMatch = (
         return acc && statesToMatch.includes(allChildren[childId]);
     }, true as boolean);
 };
+
+const logger = createLogger({level: 'error'}, [browserTransport]);
 
 const Animate = <PredicateState, TriggerState>({
     name,
@@ -52,6 +55,8 @@ const Animate = <PredicateState, TriggerState>({
 }: AnimateProps<PredicateState, TriggerState>): ReturnType<React.FC<
     AnimateProps<PredicateState, TriggerState>
 >> => {
+    const childLogger = logger.child('lalalal');
+    // console.log(logger);
     const [eState, setEState] = useState<CurrentState<TriggerState | undefined>>({
         actionCount: 0,
         currentState: 'initalizing',
@@ -73,24 +78,32 @@ const Animate = <PredicateState, TriggerState>({
     const refId = ref ? ref.id : undefined;
 
     const unMountOnHide = _unMountOnHide === undefined ? true : _unMountOnHide;
-    console.log(
-        name,
-        ': ',
-        'START------------ref',
-        refId,
-        'currentState:',
-        eState.currentState,
-        'child state',
-        eState.childStates,
-        'incoming trigger',
-        triggerState,
-        'old trigger',
-        eState.triggerState,
-        'incoming visibility',
-        visible,
-        'old visibility',
-        eState.visible
-    );
+    // console.log(
+    //     name,
+    //     ': ',
+    //     'START------------ref',
+    //     refId,
+    //     'currentState:',
+    //     eState.currentState,
+    //     'child state',
+    //     eState.childStates,
+    //     'incoming trigger',
+    //     triggerState,
+    //     'old trigger',
+    //     eState.triggerState,
+    //     'incoming visibility',
+    //     visible,
+    //     'old visibility',
+    //     eState.visible
+    // );
+
+    childLogger.info({
+        'incoming visibility': visible,
+        'old visibility': eState.visible
+    });
+    childLogger.info('LOOK AT ME');
+    const newChild = childLogger.child('hi');
+    newChild.warn({eState}, 'oh hihhhhhh');
 
     const createAnimationControl = (): AnimationControl => {
         const ac = new AnimationControl();

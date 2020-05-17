@@ -45,8 +45,8 @@ export const browserTransport: Transport = (level, scope, message, mergingObject
             acc.begin.push(() => {
                 s.collapse ? console.groupCollapsed(s.message) : console.group(s.message);
             });
-            acc.begin.push(() => {
-                console.groupCollapsed();
+            acc.end.push(() => {
+                console.groupEnd();
             });
             return {...acc, mergingObject: {...acc.mergingObject, ...s.mergingObject}};
         },
