@@ -32,7 +32,7 @@ const childrenMatch = (
     }, true as boolean);
 };
 
-const logger = createLogger({level: 'error'}, [browserTransport]);
+const logger = createLogger({level: 'error', transports: [browserTransport]}, 'animated compoents');
 
 const Animate = <PredicateState, TriggerState>({
     name,
@@ -55,7 +55,10 @@ const Animate = <PredicateState, TriggerState>({
 }: AnimateProps<PredicateState, TriggerState>): ReturnType<React.FC<
     AnimateProps<PredicateState, TriggerState>
 >> => {
-    const childLogger = logger.child('lalalal');
+    const childLogger = logger.child({collapse: true}, 'lalalal');
+    const childLogger2 = childLogger.child({collapse: false}, 'bubbe');
+    childLogger2.error('ohnoo');
+
     // console.log(logger);
     const [eState, setEState] = useState<CurrentState<TriggerState | undefined>>({
         actionCount: 0,
