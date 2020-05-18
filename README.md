@@ -1,6 +1,6 @@
 # Beano
 
-A Pino inspired logger for the Browser.
+A [Pino](https://github.com/pinojs/pino) inspired logger for the Browser.
 
 ## Usage
 
