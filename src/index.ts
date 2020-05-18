@@ -1,7 +1,6 @@
-import Animate from './animate';
-import Animatable from './animatable';
-import predicates from './predicates';
-
+import logger from './logger';
+import {browserTransport} from './browser_transport';
+import transportCaller from './transport_caller';
 export * from './types';
-
-export {Animate, Animatable, predicates};
+export default logger;
+export {browserTransport, transportCaller};
