@@ -13,6 +13,7 @@ import {
     setCurrentStateToInitializingForActionCount,
     setChildStateForActionCount
 } from './animation_state_transforms';
+import {createLogger, browserTransport} from './logger';
 
 const childrenMatch = (
     childrenOfInterest: string[],
@@ -30,6 +31,16 @@ const childrenMatch = (
         return acc && statesToMatch.includes(allChildren[childId]);
     }, true as boolean);
 };
+
+const logger = createLogger(
+    {
+        level: 'info',
+        transports: [browserTransport()],
+        groupByMessage: true,
+        module: 'Kinetic Components'
+    },
+    'Kinetic Components'
+);
 
 const Animate = <PredicateState, TriggerState>({
     name,
@@ -52,6 +63,9 @@ const Animate = <PredicateState, TriggerState>({
 }: AnimateProps<PredicateState, TriggerState>): ReturnType<React.FC<
     AnimateProps<PredicateState, TriggerState>
 >> => {
+    const animateLogger = logger.child('Animate Component');
+    const namedAnimationLogger = animateLogger.child(name || 'unnamed');
+
     const [eState, setEState] = useState<CurrentState<TriggerState | undefined>>({
         actionCount: 0,
         currentState: 'initalizing',
@@ -61,6 +75,8 @@ const Animate = <PredicateState, TriggerState>({
         childStates: {}
     });
 
+    const specificAnimateLogger = namedAnimationLogger.child(eState.currentState);
+    specificAnimateLogger.info(eState.currentState);
     const visible =
         animationBinding && animationBinding.parentVisible === false ? false : visibleProp;
 
@@ -73,23 +89,17 @@ const Animate = <PredicateState, TriggerState>({
     const refId = ref ? ref.id : undefined;
 
     const unMountOnHide = _unMountOnHide === undefined ? true : _unMountOnHide;
-    console.log(
-        name,
-        ': ',
-        'START------------ref',
-        refId,
-        'currentState:',
-        eState.currentState,
-        'child state',
-        eState.childStates,
-        'incoming trigger',
-        triggerState,
-        'old trigger',
-        eState.triggerState,
-        'incoming visibility',
-        visible,
-        'old visibility',
-        eState.visible
+
+    specificAnimateLogger.debug(
+        {
+            refId: refId,
+            currentState: eState.currentState,
+            childState: eState.childStates,
+            'incoming trigger': triggerState,
+            'incoming visibility': visible,
+            'old visibility': eState.visible
+        },
+        'initial state'
     );
 
     const createAnimationControl = (): AnimationControl => {
@@ -107,7 +117,7 @@ const Animate = <PredicateState, TriggerState>({
 
     useEffect(() => {
         if (animationBinding) {
-            console.log(name, ': ', 'Notifying parent of state :))', eState.currentState);
+            specificAnimateLogger.info(eState.currentState, 'Notifying parent of state');
 
             animationBinding.notifyParentOfState(id || uuid, eState.currentState);
         }
@@ -116,7 +126,7 @@ const Animate = <PredicateState, TriggerState>({
     useEffect(() => {
         return () => {
             if (animationBinding) {
-                console.log(name, ': ', 'Unmounting from unmount action');
+                specificAnimateLogger.debug('Unmounting from unmount action');
 
                 animationBinding.notifyParentOfState(id || uuid, 'unmounted');
             }
@@ -165,13 +175,14 @@ const Animate = <PredicateState, TriggerState>({
     };
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated eState action count', eState.actionCount);
+        specificAnimateLogger.debug({actionCount: eState.actionCount}, 'Updated action count');
     }, [eState.actionCount]);
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated ref', refId);
         if (!refId) {
-            console.log(name, ': ', 'Updated to no ref', refId);
+            specificAnimateLogger.debug({ref: refId}, 'Updated to no ref');
+        } else {
+            specificAnimateLogger.debug({ref: refId}, 'Update to new ref');
         }
     }, [refId]);
 
@@ -179,44 +190,47 @@ const Animate = <PredicateState, TriggerState>({
     const parentVisible = (animationBinding && animationBinding.parentVisible) || true;
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated parentState', parentState);
+        specificAnimateLogger.debug({parentState}, 'Update parentState');
     }, [parentState]);
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated parentVisible', parentVisible);
+        specificAnimateLogger.debug({parentVisible}, 'Update parentVisible');
     }, [parentVisible]);
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated children states', eState.childStates);
+        specificAnimateLogger.debug({childStates: eState.childStates}, 'Update childStates');
     }, [JSON.stringify(eState.childStates)]);
 
     /**
      * Run animations whenever there is a state change
      */
     useEffect(() => {
-        console.log(name, ': ', 'Child states:', eState.childStates);
+        const animateEffectLogger = specificAnimateLogger.child('animate effect');
 
         if (eState.currentState === 'restarting') {
+            animateEffectLogger.debug({restarting: true}, 'Exiting should animate effect');
+
             return;
         }
         if (ref == null) {
-            console.log(name, ': ', 'WOULD PAUSE / STOP IF COULD');
+            animateEffectLogger.debug('No ref found');
+
+            // console.log(name, ': ', 'WOULD PAUSE / STOP IF COULD');
             if (animationControl.cancel) {
-                console.log(name, ': ', 'Canceling animation');
+                animateEffectLogger.debug('Canceling existing animation');
 
                 animationControl.cancel();
             }
             if (!visible) {
                 setCurrentStateToUnmountedForActionCount(setEState);
             }
-
-            console.log(name, ': ', 'Skipping running of animation b/c ref missing');
+            animateEffectLogger.debug({refMissing: true}, 'Exiting should animate effect');
 
             return;
         }
 
         if (eState.hasRunForCycle === true) {
-            console.log(name, ': ', 'Has already run for cycle. Not running animation');
+            animateEffectLogger.debug({hasRunForCycle: true}, 'Exiting should animate effect');
 
             return;
         }
@@ -227,7 +241,10 @@ const Animate = <PredicateState, TriggerState>({
             parentState !== 'running' &&
             parentState !== 'finished'
         ) {
-            console.log(name, ': ', 'Waiting for parent to start');
+            animateEffectLogger.debug(
+                {waitingForParentToStart: true},
+                'Exiting should animate effect'
+            );
 
             return;
         }
@@ -243,12 +260,20 @@ const Animate = <PredicateState, TriggerState>({
                 eState.childStates
             )
         ) {
-            console.log(name, ': ', 'Waiting for child to start');
+            animateEffectLogger.debug(
+                {waitingForChildToStart: true},
+                'Exiting should animate effect'
+            );
+
             return;
         }
 
         if (visible && enterAfterParentFinish && parentState !== 'finished') {
-            console.log(name, ': ', 'Waiting for parent to finish');
+            animateEffectLogger.debug(
+                {waitingForParentToFinish: true},
+                'Exiting should animate effect'
+            );
+
             return;
         }
 
@@ -263,15 +288,18 @@ const Animate = <PredicateState, TriggerState>({
                 eState.childStates
             )
         ) {
-            console.log(name, ': ', 'Waiting for child to finish');
+            animateEffectLogger.debug(
+                {waitingForChildToFinish: true},
+                'Exiting should animate effect'
+            );
+
             return;
         }
 
-        console.log(name, ': ', 'Running animation');
         setHasRunForActionCount(setEState);
 
         const {ctx: animationCtx, hasRun, animationResult} = animate(ref);
-        console.log(name, ': ', 'Animation running with', hasRun, animationCtx);
+        animateEffectLogger.debug({hasRun, animationCtx}, 'Running animation');
 
         if (hasRun) {
             setCurrentStateToRunningForActionCount(setEState);
@@ -279,7 +307,8 @@ const Animate = <PredicateState, TriggerState>({
         if (animationResult && animationResult.finished) {
             animationControl.createOnFinishPromise(animationResult.finished);
         } else {
-            console.log(name, ': ', 'No finish promises found. Setting state to finished');
+            animateEffectLogger.debug('No finish promises found. Setting state to finished');
+
             setCurrentStateToFinishedForActionCount(setEState);
         }
     }, [
@@ -291,23 +320,32 @@ const Animate = <PredicateState, TriggerState>({
     ]);
 
     useEffect(() => {
-        console.log(name, ': ', 'Updated currentState', eState.currentState);
+        specificAnimateLogger.debug({currentState: eState.currentState}, 'Updated currentState');
     }, [eState.currentState]);
 
     useEffect(() => {
         if (eState.currentState === 'restarting') {
-            console.log(name, 'Lifecycle ohhhh maybe');
+            specificAnimateLogger.debug(
+                {currentState: eState.currentState},
+                'Setting currentState to initializing from restarting'
+            );
+
             setCurrentStateToInitializingForActionCount(setEState);
         }
     }, [eState.currentState]);
 
+    const endLogger = specificAnimateLogger.child('end');
     if (eState.currentState === 'restarting') {
-        console.log(name, 'Lifecycle ohhhh yeah');
+        endLogger.debug(
+            {currentState: eState.currentState},
+            'Returning null for component b/c restarting'
+        );
         // Return null to unmount children and allow new animation to be in correct dom position
         // incase an animation applied a transform or similar
         return null;
     }
     if (ref == null && unMountOnHide && visible === false) {
+        endLogger.debug({ref, unMountOnHide, visible}, 'Returning null');
         return null;
     }
 
@@ -340,17 +378,18 @@ const Animate = <PredicateState, TriggerState>({
         parentState !== 'running' &&
         parentState !== 'finished'
     ) {
-        console.log(name, ': ', 'Waiting for parent to start before entering');
+        endLogger.debug('Waiting for parent to start before showing children');
         return null;
     }
 
     if (visible && enterAfterParentFinish && parentState !== 'finished') {
-        console.log(name, ': ', 'Waiting for parent to finish before entering');
+        endLogger.debug('Waiting for parent to finish before showing children');
+
         return null;
     }
 
     if (eState.currentState === 'unmounted') {
-        console.log(name, ': ', 'Unmounted. Returning null');
+        endLogger.debug('Unmounted. Not showing showing children');
 
         return null;
     }
@@ -366,13 +405,15 @@ const Animate = <PredicateState, TriggerState>({
         JSON.stringify({triggerState, visible}) ===
             JSON.stringify({triggerState: eState.triggerState, visible: eState.visible})
     ) {
-        console.log(name, ': ', 'Unmounting b/c finished', triggerState, eState);
+        endLogger.debug('Unmounted b/c not visible and animation finished');
+
         if (eState.currentState === 'finished') {
             setCurrentStateToUnmountedForActionCount(setEState);
         }
         return null;
     } else {
-        console.log(name, ': ', 'Showing children');
+        endLogger.debug('Showing children');
+
         return realChildren;
     }
 };
