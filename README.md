@@ -1,5 +1,8 @@
 # Beano
 
+[![bundlephobia size](https://badgen.net/bundlephobia/minzip/beano)](https://bundlephobia.com/result?p=beano)
+
+
 A [Pino](https://github.com/pinojs/pino) inspired logger for the Browser.
 
 ## Usage
