@@ -1,7 +1,7 @@
 {
-    "name": "animated-components",
-    "version": "0.1.1",
-    "description": "Animation-library agnostic control for you animations. Build complex multi-component animations with ease.",
+    "name": "beano",
+    "version": "0.1.0",
+    "description": "A Pino inspired logger for the browser.",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
     "browser": "./dist/index.js",
@@ -24,14 +24,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/erhathaway/animated-components.git"
+        "url": "git+https://github.com/erhathaway/beano.git"
     },
     "author": "Ethan Hathaway",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/erhathaway/animated-components/issues"
+        "url": "https://github.com/erhathaway/beano/issues"
     },
-    "homepage": "https://github.com/erhathaway/animated-components#readme",
+    "homepage": "https://github.com/erhathaway/beano#readme",
     "devDependencies": {
         "@rollup/plugin-commonjs": "^11.0.2",
         "@rollup/plugin-node-resolve": "^7.1.1",
@@ -65,10 +65,6 @@
         "rollup-watch": "^4.3.1",
         "styled-components": "^4.4.1",
         "ts-jest": "^25.3.0",
-        "typescript": "^3.9.0-beta"
-    },
-    "dependencies": {
-        "react": "^16.13.1",
-        "react-dom": "^16.13.0"
+        "typescript": "^3.9.0"
     }
 }
