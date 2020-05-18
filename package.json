@@ -1,6 +1,6 @@
 {
     "name": "animated-components",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Animation-library agnostic control for you animations. Build complex multi-component animations with ease.",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
