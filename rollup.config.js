@@ -5,8 +5,6 @@ import pkg from './package.json';
 import {eslint} from 'rollup-plugin-eslint';
 import externalGlobals from 'rollup-plugin-external-globals';
 
-import react from 'react';
-
 const dependencies = Object.keys({
     ...pkg.dependencies,
     ...pkg.peerDependencies
@@ -40,10 +38,7 @@ export default {
             }
         }),
         commonjs({
-            include: 'node_modules/**',
-            namedExports: {
-                react: Object.keys(react)
-            }
+            include: 'node_modules/**'
         }),
         externalGlobals({
             perf_hooks: 'window' // eslint-disable-line
