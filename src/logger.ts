@@ -12,6 +12,7 @@ type Console = {
 interface ILoggerOptions {
     level?: Levels;
     collapse?: boolean;
+    groupByMessage?: boolean;
 }
 
 interface ILoggerConfig {
@@ -89,45 +90,90 @@ const extractOptionsFromMergingObject = (
     delete newMergeObject.transports;
     delete newMergeObject.level;
     delete newMergeObject.collapse;
+    delete newMergeObject.groupByMessage;
 
     return Object.keys(newMergeObject).length > 0 ? newMergeObject : undefined;
 };
-export const browserTransport: Transport = (level, mergingObject, message) => {
-    const log: Console = console;
-    if (mergingObject.scopes === undefined) {
-        throw new Error('Missing scopes');
+
+const calculateScopes = (oldScopes: Scope[], newScopes: Scope[] = []): Scope[] => {
+    let diffScopes: Scope[] = [];
+    if (oldScopes.length >= newScopes.length) {
+        for (const [index, oldScope] of oldScopes.entries()) {
+            const remainingScopes = oldScopes.length - index;
+
+            // If old scopes have groups that the new scopes don't have, we need to end these groups
+            if (newScopes[index] === undefined || oldScope.message !== newScopes[index].message) {
+                Array.from(Array(remainingScopes)).forEach(() => {
+                    console.groupEnd();
+                });
+                // Add the remaining scopes so that groups can be made for these
+                diffScopes = newScopes.slice(index, newScopes.length);
+                break;
+            }
+        }
+    } else {
+        for (const [index, newScope] of newScopes.entries()) {
+            const remainingScopes = oldScopes.length - index;
+
+            // If old scopes have groups that the new scopes don't have, we need to end these groups
+            if (oldScopes[index] === undefined || newScope.message !== oldScopes[index].message) {
+                Array.from(Array(remainingScopes)).forEach(() => {
+                    console.groupEnd();
+                });
+                // Add the remaining scopes so that groups can be made for these
+                diffScopes = newScopes.slice(index, newScopes.length);
+                break;
+            }
+        }
     }
-    const scopeControl = mergingObject.scopes.reduce(
-        (acc, s) => {
-            acc.begin.push(() => {
-                s.mergingObject && s.mergingObject.collapse
-                    ? console.groupCollapsed(s.message)
-                    : console.group(s.message);
-            });
-            acc.end.push(() => {
-                console.groupEnd();
-            });
-            return {...acc, mergingObject: {...acc.mergingObject, ...s.mergingObject}};
-        },
-        {begin: [], end: [], mergingObject: {}} as ScopeReducerAcc
-    );
-    console.log(mergingObject, scopeControl);
-    scopeControl.begin.forEach(f => f());
-    const newMergingObject = extractOptionsFromMergingObject({
-        ...scopeControl.mergingObject,
-        ...mergingObject
-    });
-
-    newMergingObject
-        ? message
-            ? log[level](message, newMergingObject)
-            : log[level](newMergingObject)
-        : message
-        ? log[level](message)
-        : noop;
-    scopeControl.end.forEach(f => f());
+    return diffScopes;
 };
+export const browserTransport = (): Transport => {
+    let previousScopes: Scope[] = [];
+    return (level, mergingObject, message) => {
+        const log: Console = console;
+        if (mergingObject.scopes === undefined) {
+            throw new Error('Missing scopes');
+        }
+        const calculateScopesToGroupOn =
+            mergingObject && mergingObject.groupByMessage === true
+                ? calculateScopes(previousScopes, mergingObject.scopes)
+                : mergingObject.scopes;
+        const scopeControl = calculateScopesToGroupOn.reduce(
+            (acc, s) => {
+                acc.begin.push(() => {
+                    s.mergingObject && s.mergingObject.collapse
+                        ? console.groupCollapsed(s.message)
+                        : console.group(s.message);
+                });
+                acc.end.push(() => {
+                    console.groupEnd();
+                });
+                return {...acc, mergingObject: {...acc.mergingObject, ...s.mergingObject}};
+            },
+            {begin: [], end: [], mergingObject: {}} as ScopeReducerAcc
+        );
 
+        scopeControl.begin.forEach(f => f());
+        const newMergingObject = extractOptionsFromMergingObject({
+            ...scopeControl.mergingObject,
+            ...mergingObject
+        });
+
+        newMergingObject
+            ? message
+                ? log[level](message, newMergingObject)
+                : log[level](newMergingObject)
+            : message
+            ? log[level](message)
+            : noop;
+
+        if (mergingObject && mergingObject.groupByMessage === false) {
+            scopeControl.end.forEach(f => f());
+        }
+        previousScopes = [...mergingObject.scopes];
+    };
+};
 const transportCaller = (logLevel: Levels, mergeObject: MergingObject): LogEvent => (
     paramOne?: object | string,
     paramTwo?: string
@@ -150,8 +196,6 @@ const transportCaller = (logLevel: Levels, mergeObject: MergingObject): LogEvent
 export const createLogger = (
     paramOne?: MergingObject | Message,
     paramTwo?: Message
-    // _transports: Transport[],
-    // scopes?: Scope[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): ILogger => {
     // extract existing scopes
@@ -160,6 +204,12 @@ export const createLogger = (
 
     // extract new mergeObject
     const newMergeObject: MergingObject = paramOne && typeof paramOne === 'object' ? paramOne : {};
+
+    // extract new mergeObject
+    const groupByMessage: ILoggerOptions['groupByMessage'] =
+        paramOne && typeof paramOne === 'object' && paramOne.groupByMessage !== undefined
+            ? paramOne.groupByMessage
+            : false;
 
     // extract message
     const message: Message =
@@ -193,7 +243,8 @@ export const createLogger = (
         level,
         transports,
         scopes: newScopes,
-        collapse
+        collapse,
+        groupByMessage
     };
 
     return {
