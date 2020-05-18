@@ -28,6 +28,18 @@
     },
     "author": "Ethan Hathaway",
     "license": "MIT",
+    "keywords": [
+        "logger",
+        "browser",
+        "pino",
+        "childLogger",
+        "child logger",
+        "module",
+        "scoped",
+        "group",
+        "console.log",
+        "console"
+    ],
     "bugs": {
         "url": "https://github.com/erhathaway/beano/issues"
     },
