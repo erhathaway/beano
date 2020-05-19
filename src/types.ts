@@ -1,8 +1,9 @@
 /**
  * General types
  */
-export type Levels = 'warn' | 'info' | 'error' | 'debug';
+export type Levels = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 export type Console = {
+    // eslint-disable-next-line
     [level in Levels]: (...params: any[]) => void;
 };
 
@@ -20,6 +21,11 @@ export interface ILoggerConfig {
     scopes?: Scope[];
 }
 
+export interface ILoggerBuilderOptions {
+    _skipAddingScope?: boolean;
+}
+
+// eslint-disable-next-line
 export type MergingObject = {[key: string]: any} & ILoggerOptions & ILoggerConfig;
 export type Message = string | undefined;
 
@@ -49,10 +55,12 @@ export interface ParentScope {
 export interface ILogger {
     child: ChildScope;
     // parent: ParentScope;
+    trace: LogEvent;
+    debug: LogEvent;
     info: LogEvent;
     warn: LogEvent;
-    debug: LogEvent;
     error: LogEvent;
+    silent: LogEvent;
 }
 
 /**

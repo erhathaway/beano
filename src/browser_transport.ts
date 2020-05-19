@@ -8,7 +8,7 @@ import {
     Transport
 } from './types';
 
-import {noop} from './logger';
+import {noop} from './utils';
 
 export const extractOptionsFromMergingObject = (
     mergingObject: MergingObject
@@ -56,17 +56,19 @@ export const calculateScopes = (oldScopes: Scope[], newScopes: Scope[] = []): Sc
     }
     return diffScopes;
 };
-export const browserTransport = (): Transport => {
+export const createBrowserTransport = (): Transport => {
     let previousScopes: Scope[] = [];
     return (level, mergingObject, message) => {
         const log: Console = console;
-        if (mergingObject.scopes === undefined) {
-            throw new Error('Missing scopes');
+
+        // if we have previous scopes we were grouping on, but we are no longer grouping, we need to back out of the groups
+        if (previousScopes.length > 0 && mergingObject && mergingObject.groupByMessage === false) {
+            previousScopes.forEach(console.groupEnd);
         }
         const calculateScopesToGroupOn =
-            mergingObject && mergingObject.groupByMessage === true
-                ? calculateScopes(previousScopes, mergingObject.scopes)
-                : mergingObject.scopes;
+            mergingObject && mergingObject.groupByMessage !== false
+                ? calculateScopes(previousScopes, mergingObject.scopes || [])
+                : mergingObject.scopes || [];
         const scopeControl = calculateScopesToGroupOn.reduce(
             (acc, s) => {
                 acc.begin.push(() => {
@@ -82,12 +84,13 @@ export const browserTransport = (): Transport => {
             {begin: [], end: [], mergingObject: {}} as ScopeReducerAcc
         );
 
-        scopeControl.begin.forEach((f) => f());
+        scopeControl.begin.forEach(f => f());
         const newMergingObject = extractOptionsFromMergingObject({
             ...scopeControl.mergingObject,
             ...mergingObject
         });
 
+        // do the actual logging
         newMergingObject
             ? message
                 ? log[level](message, newMergingObject)
@@ -97,8 +100,16 @@ export const browserTransport = (): Transport => {
             : noop;
 
         if (mergingObject && mergingObject.groupByMessage === false) {
-            scopeControl.end.forEach((f) => f());
+            scopeControl.end.forEach(f => f());
         }
-        previousScopes = [...mergingObject.scopes];
+
+        // if we are grouping by messages save the scopes
+        previousScopes =
+            mergingObject.groupByMessage !== false && mergingObject.scopes
+                ? [...mergingObject.scopes]
+                : [];
     };
 };
+
+// create a singleton so there is one browser transport
+export const browserTransport = createBrowserTransport();
