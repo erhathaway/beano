@@ -9,9 +9,10 @@
     "files": [
         "dist"
     ],
+    "default": "app_build/index.js",
     "scripts": {
-        "app:start": "npm run clean && parcel app/index.html --out-dir build_app --no-cache --no-autoinstall",
-        "app:build": "npm run clean && parcel build --out-dir build_app --no-autoinstall app/index.html",
+        "app:start": "npm run clean && parcel app/index.html  --no-cache --no-autoinstall",
+        "app:build": "npm run clean && parcel serve app/index.html --no-autoinstall",
         "clean": "rimraf dist tmp",
         "build": "npm run clean && rollup -c",
         "build:watch": "npm run clean && rollup -cw",
@@ -51,6 +52,7 @@
         "@types/jest": "^25.2.1",
         "@types/react": "^16.9.34",
         "@types/react-dom": "^16.9.5",
+        "@types/react-syntax-highlighter": "^11.0.4",
         "@types/react-test-renderer": "^16.9.2",
         "@types/styled-components": "^5.0.1",
         "@typescript-eslint/eslint-plugin": "^2.26.0",
@@ -64,20 +66,24 @@
         "jest": "^25.3.0",
         "mobx": "^5.15.4",
         "mobx-react": "^6.2.2",
-        "parcel-bundler": "^1.12.3",
+        "parcel": "^2.0.0-alpha.3.2",
         "prettier": "^1.18.2",
         "react": "^16.13.1",
         "react-id-generator": "^3.0.0",
+        "react-syntax-highlighter": "^12.2.1",
         "react-test-renderer": "^16.13.0",
         "rimraf": "^3.0.2",
-        "router-primitives": "^1.0.0-beta.6",
         "rollup": "^2.0.6",
         "rollup-plugin-eslint": "^7.0.0",
         "rollup-plugin-external-globals": "^0.5.0",
         "rollup-plugin-typescript2": "^0.26.0",
         "rollup-watch": "^4.3.1",
+        "router-primitives": "^1.0.0-beta.6",
         "styled-components": "^4.4.1",
         "ts-jest": "^25.3.0",
         "typescript": "^3.9.0"
+    },
+    "dependencies": {
+        "react-dom": "^16.13.1"
     }
 }

@@ -8,7 +8,7 @@ import {
     Transport
 } from './types';
 
-import {noop} from './logger';
+import {noop} from './utils';
 
 export const extractOptionsFromMergingObject = (
     mergingObject: MergingObject

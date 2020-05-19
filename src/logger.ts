@@ -10,9 +10,7 @@ import {
 } from './types';
 import transportCaller from './transport_caller';
 import {browserTransport} from './browser_transport';
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export const noop = (): void => {};
+import {noop} from './utils';
 
 export const createLogger = (
     paramOne?: MergingObject | Message,
