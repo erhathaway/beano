@@ -49,6 +49,40 @@ my_module
         > or not
 ```
 
+## Usage in modules and packages
+
+By exposing an optional `logger` attribute in your package's or module's interface, you allow consumers additional insight. Beano helps you scope logging that happens in third party contexts so logs are more readable.
+
+For example, say you published the following component
+```
+const MyPublishedComponent = ({logger}) => {
+    const l = logger && logger.child('MyPublishedComponent');
+    
+    useEffect(() => {
+        l && l.debug('Running effect')
+        ...some effect
+    }
+    
+    if (...some predicate) {
+        l && l.warn('Some state noticed')
+    }
+    
+    return (
+        <h1>Hi</h1>
+    )
+}
+```
+
+Now when users consume in it their app, they can get debug information scoped to their current context.
+
+```shell
+[current scopes]
+    MyPublishedComponent
+        > Running effect
+        > Some state noticed
+
+```
+
 ## API
 
 You can customize behavior by passing options to the merge object at any time!
