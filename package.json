@@ -1,6 +1,6 @@
 {
     "name": "beano",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "A Pino inspired logger for the browser.",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
@@ -14,6 +14,7 @@
         "app:start": "npm run clean && parcel app/index.html  --no-cache --no-autoinstall",
         "app:build": "npm run clean && parcel serve app/index.html --no-autoinstall",
         "clean": "rimraf dist tmp",
+        "publish:dist-as-docs": "mv ./dist docs",
         "build": "npm run clean && rollup -c",
         "build:watch": "npm run clean && rollup -cw",
         "lint": "eslint . --ext .js,.jsx,.ts,.tsx",

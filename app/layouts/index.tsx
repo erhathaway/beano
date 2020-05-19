@@ -21,13 +21,13 @@ const HowTo = styled.div`
     border-radius: 7px;
     padding: 20px;
     color: white;
-    width: 800px;
+    max-width: 800px;
 `;
 
 const Section = styled.div`
     margin-top: -10px;
     padding: 40px;
-    width: 1000px;
+    max-width: 1000px;
 `;
 
 const SectionTitle = styled.div`
