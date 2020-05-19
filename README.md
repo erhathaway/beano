@@ -51,7 +51,7 @@ my_module
 
 ## Usage in modules and packages
 
-By exposing an optional `logger` attribute in your package's or module's interface, you allow consumers additional insight. Beano helps you scope logging that happens in third party contexts so logs are more readable.
+Beano helps you scope logging that happens in third party contexts, which makes logs more readable. Simply expose an optional `logger` attribute in your package or module's interface. 
 
 For example, say you published the following component
 ```
@@ -73,7 +73,7 @@ const MyPublishedComponent = ({logger}) => {
 }
 ```
 
-Now when users consume in it their app, they can get debug information scoped to their current context.
+Now when users consume it in their app, they can get logs from the external context scoped to their current context.
 
 ```shell
 [current scopes]
