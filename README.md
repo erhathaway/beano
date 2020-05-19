@@ -20,17 +20,17 @@ childLogger.info({muyBeano: true}, 'is right');
 childLogger.debug('something doesnt seem right...');
 
 // create a child logger from a child logger
-evenMoreChildrenLogger = childLogger.child({collapse: true}, 'my_sub_module');
+const evenMoreChildrenLogger = childLogger.child({collapse: true}, 'my_sub_module');
 
 // use debug, info, warn, error level
 evenMoreChildrenLogger.warn('im a nested logger');
-
 
 logger.info('starting over');
 eventMoreChildrenLogger.error('or not');
 ```
 
 The browser terminal output would look like:
+
 ```bash
 > look at me
 my_module
@@ -50,9 +50,7 @@ You can customize behavior by passing options to the merge object at any time!
 
 Options:
 
-|name|type|purpose|
-|-|-|-|
-| collapse | boolean | Whether to use `console.group` or `console.groupCollapsed` for the current child scope. |
-| groupByMessage | boolean | Whether to try and group sequential messages into the same group if they belong. |
-
-   
+| name           | type    | purpose                                                                                 |
+| -------------- | ------- | --------------------------------------------------------------------------------------- |
+| collapse       | boolean | Whether to use `console.group` or `console.groupCollapsed` for the current child scope. |
+| groupByMessage | boolean | Whether to try and group sequential messages into the same group if they belong.        |
