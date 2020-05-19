@@ -7,6 +7,12 @@ describe('transportCaller', () => {
         transportCaller('info', mergingObject)('hello');
         expect(transport.mock.calls).toEqual([['info', mergingObject, 'hello']]);
     });
+    it('throws an error if no transport is supplied', () => {
+        const mergingObject = {};
+        expect(() => {
+            transportCaller('info', mergingObject)('hello');
+        }).toThrowError();
+    });
     describe('closure', () => {
         it('can be called with a message only', () => {
             const transport = jest.fn();
@@ -29,6 +35,13 @@ describe('transportCaller', () => {
             expect(transport.mock.calls).toEqual([
                 ['info', {...mergingObject, test: 'data'}, 'yus']
             ]);
+        });
+        it('throws an error if the first param isnt an object or string', () => {
+            const transport = jest.fn();
+            const mergingObject = {transports: [transport]};
+            expect(() => {
+                transportCaller('info', mergingObject)(2 as any);
+            }).toThrowError();
         });
     });
 });

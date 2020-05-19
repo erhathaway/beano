@@ -1,7 +1,7 @@
 /**
  * General types
  */
-export type Levels = 'warn' | 'info' | 'error' | 'debug';
+export type Levels = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 export type Console = {
     [level in Levels]: (...params: any[]) => void;
 };
@@ -49,10 +49,12 @@ export interface ParentScope {
 export interface ILogger {
     child: ChildScope;
     // parent: ParentScope;
+    trace: LogEvent;
+    debug: LogEvent;
     info: LogEvent;
     warn: LogEvent;
-    debug: LogEvent;
     error: LogEvent;
+    silent: LogEvent;
 }
 
 /**

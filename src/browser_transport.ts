@@ -103,3 +103,6 @@ export const createBrowserTransport = (): Transport => {
         previousScopes = mergingObject.scopes ? [...mergingObject.scopes] : [];
     };
 };
+
+// create a singleton so there is one browser transport
+export const browserTransport = createBrowserTransport();
