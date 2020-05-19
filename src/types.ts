@@ -3,6 +3,7 @@
  */
 export type Levels = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 export type Console = {
+    // eslint-disable-next-line
     [level in Levels]: (...params: any[]) => void;
 };
 
@@ -24,6 +25,7 @@ export interface ILoggerBuilderOptions {
     _skipAddingScope?: boolean;
 }
 
+// eslint-disable-next-line
 export type MergingObject = {[key: string]: any} & ILoggerOptions & ILoggerConfig;
 export type Message = string | undefined;
 

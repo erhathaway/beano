@@ -40,6 +40,7 @@ describe('transportCaller', () => {
             const transport = jest.fn();
             const mergingObject = {transports: [transport]};
             expect(() => {
+                // eslint-disable-next-line
                 transportCaller('info', mergingObject)(2 as any);
             }).toThrowError();
         });
