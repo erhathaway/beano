@@ -56,17 +56,17 @@ export const calculateScopes = (oldScopes: Scope[], newScopes: Scope[] = []): Sc
     }
     return diffScopes;
 };
-export const browserTransport = (): Transport => {
+export const createBrowserTransport = (): Transport => {
     let previousScopes: Scope[] = [];
     return (level, mergingObject, message) => {
         const log: Console = console;
-        if (mergingObject.scopes === undefined) {
-            throw new Error('Missing scopes');
-        }
+        // if (mergingObject.scopes === undefined) {
+        //     throw new Error('Missing scopes');
+        // }
         const calculateScopesToGroupOn =
-            mergingObject && mergingObject.groupByMessage === true
-                ? calculateScopes(previousScopes, mergingObject.scopes)
-                : mergingObject.scopes;
+            mergingObject && mergingObject.groupByMessage !== false
+                ? calculateScopes(previousScopes, mergingObject.scopes || [])
+                : mergingObject.scopes || [];
         const scopeControl = calculateScopesToGroupOn.reduce(
             (acc, s) => {
                 acc.begin.push(() => {
@@ -82,12 +82,13 @@ export const browserTransport = (): Transport => {
             {begin: [], end: [], mergingObject: {}} as ScopeReducerAcc
         );
 
-        scopeControl.begin.forEach((f) => f());
+        scopeControl.begin.forEach(f => f());
         const newMergingObject = extractOptionsFromMergingObject({
             ...scopeControl.mergingObject,
             ...mergingObject
         });
 
+        // do the actual logging
         newMergingObject
             ? message
                 ? log[level](message, newMergingObject)
@@ -97,8 +98,8 @@ export const browserTransport = (): Transport => {
             : noop;
 
         if (mergingObject && mergingObject.groupByMessage === false) {
-            scopeControl.end.forEach((f) => f());
+            scopeControl.end.forEach(f => f());
         }
-        previousScopes = [...mergingObject.scopes];
+        previousScopes = mergingObject.scopes ? [...mergingObject.scopes] : [];
     };
 };
