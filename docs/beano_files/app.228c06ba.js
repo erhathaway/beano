@@ -28789,7 +28789,7 @@ try {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react":"c3469d175e6ab91a6ebac2096f1b2459","styled-components":"00f29180361410c43755b2aab57c93df","react-syntax-highlighter":"747f6b7185372d08fbb7ed66ea571a85","react-syntax-highlighter/dist/esm/styles/hljs":"a8b6d6e851508d14dd47ee7b6d7bb9b3","../../node_modules/@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"304bfcdf97c182c258933a329c4fc1cd","../../src":"7843b3960e086726267ff606847fc92b"}],"00f29180361410c43755b2aab57c93df":[function(require,module,exports) {
+},{"react":"c3469d175e6ab91a6ebac2096f1b2459","styled-components":"00f29180361410c43755b2aab57c93df","react-syntax-highlighter":"747f6b7185372d08fbb7ed66ea571a85","react-syntax-highlighter/dist/esm/styles/hljs":"a8b6d6e851508d14dd47ee7b6d7bb9b3","../../src":"7843b3960e086726267ff606847fc92b","../../node_modules/@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"304bfcdf97c182c258933a329c4fc1cd"}],"00f29180361410c43755b2aab57c93df":[function(require,module,exports) {
 'use strict';
 
 var process = require("process");
@@ -86146,6 +86146,281 @@ var _default = {
   }
 };
 exports.default = _default;
+},{}],"7843b3960e086726267ff606847fc92b":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  createBrowserTransport: true,
+  transportCaller: true
+};
+Object.defineProperty(exports, "createBrowserTransport", {
+  enumerable: true,
+  get: function () {
+    return _browser_transport.createBrowserTransport;
+  }
+});
+Object.defineProperty(exports, "transportCaller", {
+  enumerable: true,
+  get: function () {
+    return _transport_caller.default;
+  }
+});
+exports.default = void 0;
+
+var _logger = _interopRequireDefault(require("./logger"));
+
+var _browser_transport = require("./browser_transport");
+
+var _transport_caller = _interopRequireDefault(require("./transport_caller"));
+
+var _types = require("./types");
+
+Object.keys(_types).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _types[key];
+    }
+  });
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = _logger.default;
+exports.default = _default;
+},{"./logger":"3a28a5f68bea276b4c033ae4ba0ea6c1","./browser_transport":"57c44b5e34b1c90ebfb541cdacf7559b","./transport_caller":"1f4db29fb89c5aea544207ad680171b3","./types":"f47eddaf57008b5a4873047602ba33f4"}],"3a28a5f68bea276b4c033ae4ba0ea6c1":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.createLogger = void 0;
+
+var _transport_caller = _interopRequireDefault(require("./transport_caller"));
+
+var _browser_transport = require("./browser_transport");
+
+var _utils = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const createLogger = (paramOne, paramTwo, options) => {
+  // extract existing scopes
+  const oldScopes = paramOne && typeof paramOne === 'object' && paramOne.scopes ? paramOne.scopes : []; // extract existing transports
+
+  const transports = paramOne && typeof paramOne === 'object' && paramOne.transports ? paramOne.transports : [_browser_transport.browserTransport]; // extract existing groupByMessage
+
+  const groupByMessage = paramOne && typeof paramOne === 'object' && paramOne.groupByMessage !== undefined ? paramOne.groupByMessage : true; // extract message
+
+  const message = paramOne && typeof paramOne === 'object' && paramTwo && typeof paramTwo === 'string' ? paramTwo : typeof paramOne === 'string' ? paramOne : undefined; // extract new mergeObject
+
+  const newMergeObject = paramOne && typeof paramOne === 'object' ? paramOne : undefined; // {transports, scopes: [], groupByMessage, message};
+
+  const newScope = newMergeObject && (options == null || options && options._skipAddingScope === false) ? {
+    message,
+    mergingObject: newMergeObject
+  } : undefined;
+  const newScopes = newScope ? [...oldScopes, newScope] : [...oldScopes]; // extract existing log level
+
+  const level = paramOne && typeof paramOne === 'object' && paramOne.level ? paramOne.level : 'info'; // extract collapse
+
+  const collapse = paramOne && typeof paramOne === 'object' && paramOne.collapse ? paramOne.collapse : false;
+  const existingMergeObj = {
+    level,
+    transports,
+    scopes: newScopes,
+    collapse,
+    groupByMessage
+  };
+  return {
+    child: (childParamOne, childParamTwo) => {
+      if (typeof childParamOne === 'string') {
+        return { ...createLogger(existingMergeObj, childParamOne)
+        };
+      } else if (typeof childParamOne === 'object') {
+        const childMergeObj = { ...existingMergeObj,
+          ...childParamOne
+        };
+        return { ...createLogger(childMergeObj, childParamTwo)
+        };
+      } else {
+        // TODO add better error handling around possible abuse
+        throw new Error('Invalid call');
+      }
+    },
+    trace: ['trace', 'debug', 'info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('trace', existingMergeObj) : _utils.noop,
+    debug: ['debug', 'info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('debug', existingMergeObj) : _utils.noop,
+    info: ['info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('info', existingMergeObj) : _utils.noop,
+    warn: ['warn', 'error'].includes(level) ? (0, _transport_caller.default)('warn', existingMergeObj) : _utils.noop,
+    error: ['error'].includes(level) ? (0, _transport_caller.default)('error', existingMergeObj) : _utils.noop,
+    silent: _utils.noop
+  };
+}; // The first time this is run we don't want to add scopes.
+// Normally this method is only called when creating scopes
+
+
+exports.createLogger = createLogger;
+
+var _default = createLogger({}, undefined, {
+  _skipAddingScope: true
+});
+
+exports.default = _default;
+},{"./transport_caller":"1f4db29fb89c5aea544207ad680171b3","./browser_transport":"57c44b5e34b1c90ebfb541cdacf7559b","./utils":"2841ed8492cef801fe4e2da244a83beb"}],"1f4db29fb89c5aea544207ad680171b3":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+const transportCaller = (logLevel, mergeObject) => (paramOne, paramTwo) => {
+  const newMergeObject = typeof paramOne === 'object' ? { ...mergeObject,
+    ...paramOne
+  } : mergeObject;
+
+  if (newMergeObject.transports === undefined) {
+    throw new Error('Missing transports');
+  }
+
+  newMergeObject.transports.forEach(t => {
+    if (typeof paramOne === 'string') {
+      t(logLevel, newMergeObject, paramOne);
+    } else if (typeof paramOne === 'object') {
+      t(logLevel, newMergeObject, paramTwo);
+    } else {
+      throw new Error('Missing merging object');
+    }
+  });
+};
+
+var _default = transportCaller;
+exports.default = _default;
+},{}],"57c44b5e34b1c90ebfb541cdacf7559b":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.browserTransport = exports.createBrowserTransport = exports.calculateScopes = exports.extractOptionsFromMergingObject = void 0;
+
+var _utils = require("./utils");
+
+const extractOptionsFromMergingObject = mergingObject => {
+  const newMergeObject = { ...mergingObject
+  };
+  delete newMergeObject.scopes;
+  delete newMergeObject.transports;
+  delete newMergeObject.level;
+  delete newMergeObject.collapse;
+  delete newMergeObject.groupByMessage;
+  return Object.keys(newMergeObject).length > 0 ? newMergeObject : undefined;
+};
+
+exports.extractOptionsFromMergingObject = extractOptionsFromMergingObject;
+
+const calculateScopes = (oldScopes, newScopes = []) => {
+  let diffScopes = [];
+
+  if (oldScopes.length >= newScopes.length) {
+    for (const [index, oldScope] of oldScopes.entries()) {
+      const remainingScopes = oldScopes.length - index; // If old scopes have groups that the new scopes don't have, we need to end these groups
+
+      if (newScopes[index] === undefined || oldScope.message !== newScopes[index].message) {
+        Array.from(Array(remainingScopes)).forEach(() => {
+          console.groupEnd();
+        }); // Add the remaining scopes so that groups can be made for these
+
+        diffScopes = newScopes.slice(index, newScopes.length);
+        break;
+      }
+    }
+  } else {
+    for (const [index, newScope] of newScopes.entries()) {
+      const remainingScopes = oldScopes.length - index; // If old scopes have groups that the new scopes don't have, we need to end these groups
+
+      if (oldScopes[index] === undefined || newScope.message !== oldScopes[index].message) {
+        Array.from(Array(remainingScopes)).forEach(() => {
+          console.groupEnd();
+        }); // Add the remaining scopes so that groups can be made for these
+
+        diffScopes = newScopes.slice(index, newScopes.length);
+        break;
+      }
+    }
+  }
+
+  return diffScopes;
+};
+
+exports.calculateScopes = calculateScopes;
+
+const createBrowserTransport = () => {
+  let previousScopes = [];
+  return (level, mergingObject, message) => {
+    const log = console; // if we have previous scopes we were grouping on, but we are no longer grouping, we need to back out of the groups
+
+    if (previousScopes.length > 0 && mergingObject && mergingObject.groupByMessage === false) {
+      previousScopes.forEach(console.groupEnd);
+    }
+
+    const calculateScopesToGroupOn = mergingObject && mergingObject.groupByMessage !== false ? calculateScopes(previousScopes, mergingObject.scopes || []) : mergingObject.scopes || [];
+    const scopeControl = calculateScopesToGroupOn.reduce((acc, s) => {
+      acc.begin.push(() => {
+        s.mergingObject && s.mergingObject.collapse ? console.groupCollapsed(s.message) : console.group(s.message);
+      });
+      acc.end.push(() => {
+        console.groupEnd();
+      });
+      return { ...acc,
+        mergingObject: { ...acc.mergingObject,
+          ...s.mergingObject
+        }
+      };
+    }, {
+      begin: [],
+      end: [],
+      mergingObject: {}
+    });
+    scopeControl.begin.forEach(f => f());
+    const newMergingObject = extractOptionsFromMergingObject({ ...scopeControl.mergingObject,
+      ...mergingObject
+    }); // do the actual logging
+
+    newMergingObject ? message ? log[level](message, newMergingObject) : log[level](newMergingObject) : message ? log[level](message) : _utils.noop;
+
+    if (mergingObject && mergingObject.groupByMessage === false) {
+      scopeControl.end.forEach(f => f());
+    } // if we are grouping by messages save the scopes
+
+
+    previousScopes = mergingObject.groupByMessage !== false && mergingObject.scopes ? [...mergingObject.scopes] : [];
+  };
+}; // create a singleton so there is one browser transport
+
+
+exports.createBrowserTransport = createBrowserTransport;
+const browserTransport = createBrowserTransport();
+exports.browserTransport = browserTransport;
+},{"./utils":"2841ed8492cef801fe4e2da244a83beb"}],"2841ed8492cef801fe4e2da244a83beb":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.noop = void 0;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
+
+exports.noop = noop;
+},{}],"f47eddaf57008b5a4873047602ba33f4":[function(require,module,exports) {
+
 },{}],"304bfcdf97c182c258933a329c4fc1cd":[function(require,module,exports) {
 "use strict";
 
@@ -86903,281 +87178,6 @@ if ("development" !== "production") {
     module.exports = runtime;
   })();
 }
-},{}],"7843b3960e086726267ff606847fc92b":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var _exportNames = {
-  createBrowserTransport: true,
-  transportCaller: true
-};
-Object.defineProperty(exports, "createBrowserTransport", {
-  enumerable: true,
-  get: function () {
-    return _browser_transport.createBrowserTransport;
-  }
-});
-Object.defineProperty(exports, "transportCaller", {
-  enumerable: true,
-  get: function () {
-    return _transport_caller.default;
-  }
-});
-exports.default = void 0;
-
-var _logger = _interopRequireDefault(require("./logger"));
-
-var _browser_transport = require("./browser_transport");
-
-var _transport_caller = _interopRequireDefault(require("./transport_caller"));
-
-var _types = require("./types");
-
-Object.keys(_types).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _types[key];
-    }
-  });
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = _logger.default;
-exports.default = _default;
-},{"./logger":"3a28a5f68bea276b4c033ae4ba0ea6c1","./browser_transport":"57c44b5e34b1c90ebfb541cdacf7559b","./transport_caller":"1f4db29fb89c5aea544207ad680171b3","./types":"f47eddaf57008b5a4873047602ba33f4"}],"3a28a5f68bea276b4c033ae4ba0ea6c1":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = exports.createLogger = void 0;
-
-var _transport_caller = _interopRequireDefault(require("./transport_caller"));
-
-var _browser_transport = require("./browser_transport");
-
-var _utils = require("./utils");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const createLogger = (paramOne, paramTwo, options) => {
-  // extract existing scopes
-  const oldScopes = paramOne && typeof paramOne === 'object' && paramOne.scopes ? paramOne.scopes : []; // extract existing transports
-
-  const transports = paramOne && typeof paramOne === 'object' && paramOne.transports ? paramOne.transports : [_browser_transport.browserTransport]; // extract existing groupByMessage
-
-  const groupByMessage = paramOne && typeof paramOne === 'object' && paramOne.groupByMessage !== undefined ? paramOne.groupByMessage : true; // extract message
-
-  const message = paramOne && typeof paramOne === 'object' && paramTwo && typeof paramTwo === 'string' ? paramTwo : typeof paramOne === 'string' ? paramOne : undefined; // extract new mergeObject
-
-  const newMergeObject = paramOne && typeof paramOne === 'object' ? paramOne : undefined; // {transports, scopes: [], groupByMessage, message};
-
-  const newScope = newMergeObject && (options == null || options && options._skipAddingScope === false) ? {
-    message,
-    mergingObject: newMergeObject
-  } : undefined;
-  const newScopes = newScope ? [...oldScopes, newScope] : [...oldScopes]; // extract existing log level
-
-  const level = paramOne && typeof paramOne === 'object' && paramOne.level ? paramOne.level : 'info'; // extract collapse
-
-  const collapse = paramOne && typeof paramOne === 'object' && paramOne.collapse ? paramOne.collapse : false;
-  const existingMergeObj = {
-    level,
-    transports,
-    scopes: newScopes,
-    collapse,
-    groupByMessage
-  };
-  return {
-    child: (childParamOne, childParamTwo) => {
-      if (typeof childParamOne === 'string') {
-        return { ...createLogger(existingMergeObj, childParamOne)
-        };
-      } else if (typeof childParamOne === 'object') {
-        const childMergeObj = { ...existingMergeObj,
-          ...childParamOne
-        };
-        return { ...createLogger(childMergeObj, childParamTwo)
-        };
-      } else {
-        // TODO add better error handling around possible abuse
-        throw new Error('Invalid call');
-      }
-    },
-    trace: ['trace', 'debug', 'info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('trace', existingMergeObj) : _utils.noop,
-    debug: ['debug', 'info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('debug', existingMergeObj) : _utils.noop,
-    info: ['info', 'warn', 'error'].includes(level) ? (0, _transport_caller.default)('info', existingMergeObj) : _utils.noop,
-    warn: ['warn', 'error'].includes(level) ? (0, _transport_caller.default)('warn', existingMergeObj) : _utils.noop,
-    error: ['error'].includes(level) ? (0, _transport_caller.default)('error', existingMergeObj) : _utils.noop,
-    silent: _utils.noop
-  };
-}; // The first time this is run we don't want to add scopes.
-// Normally this method is only called when creating scopes
-
-
-exports.createLogger = createLogger;
-
-var _default = createLogger({}, undefined, {
-  _skipAddingScope: true
-});
-
-exports.default = _default;
-},{"./transport_caller":"1f4db29fb89c5aea544207ad680171b3","./browser_transport":"57c44b5e34b1c90ebfb541cdacf7559b","./utils":"2841ed8492cef801fe4e2da244a83beb"}],"1f4db29fb89c5aea544207ad680171b3":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-const transportCaller = (logLevel, mergeObject) => (paramOne, paramTwo) => {
-  const newMergeObject = typeof paramOne === 'object' ? { ...mergeObject,
-    ...paramOne
-  } : mergeObject;
-
-  if (newMergeObject.transports === undefined) {
-    throw new Error('Missing transports');
-  }
-
-  newMergeObject.transports.forEach(t => {
-    if (typeof paramOne === 'string') {
-      t(logLevel, newMergeObject, paramOne);
-    } else if (typeof paramOne === 'object') {
-      t(logLevel, newMergeObject, paramTwo);
-    } else {
-      throw new Error('Missing merging object');
-    }
-  });
-};
-
-var _default = transportCaller;
-exports.default = _default;
-},{}],"57c44b5e34b1c90ebfb541cdacf7559b":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.browserTransport = exports.createBrowserTransport = exports.calculateScopes = exports.extractOptionsFromMergingObject = void 0;
-
-var _utils = require("./utils");
-
-const extractOptionsFromMergingObject = mergingObject => {
-  const newMergeObject = { ...mergingObject
-  };
-  delete newMergeObject.scopes;
-  delete newMergeObject.transports;
-  delete newMergeObject.level;
-  delete newMergeObject.collapse;
-  delete newMergeObject.groupByMessage;
-  return Object.keys(newMergeObject).length > 0 ? newMergeObject : undefined;
-};
-
-exports.extractOptionsFromMergingObject = extractOptionsFromMergingObject;
-
-const calculateScopes = (oldScopes, newScopes = []) => {
-  let diffScopes = [];
-
-  if (oldScopes.length >= newScopes.length) {
-    for (const [index, oldScope] of oldScopes.entries()) {
-      const remainingScopes = oldScopes.length - index; // If old scopes have groups that the new scopes don't have, we need to end these groups
-
-      if (newScopes[index] === undefined || oldScope.message !== newScopes[index].message) {
-        Array.from(Array(remainingScopes)).forEach(() => {
-          console.groupEnd();
-        }); // Add the remaining scopes so that groups can be made for these
-
-        diffScopes = newScopes.slice(index, newScopes.length);
-        break;
-      }
-    }
-  } else {
-    for (const [index, newScope] of newScopes.entries()) {
-      const remainingScopes = oldScopes.length - index; // If old scopes have groups that the new scopes don't have, we need to end these groups
-
-      if (oldScopes[index] === undefined || newScope.message !== oldScopes[index].message) {
-        Array.from(Array(remainingScopes)).forEach(() => {
-          console.groupEnd();
-        }); // Add the remaining scopes so that groups can be made for these
-
-        diffScopes = newScopes.slice(index, newScopes.length);
-        break;
-      }
-    }
-  }
-
-  return diffScopes;
-};
-
-exports.calculateScopes = calculateScopes;
-
-const createBrowserTransport = () => {
-  let previousScopes = [];
-  return (level, mergingObject, message) => {
-    const log = console; // if we have previous scopes we were grouping on, but we are no longer grouping, we need to back out of the groups
-
-    if (previousScopes.length > 0 && mergingObject && mergingObject.groupByMessage === false) {
-      previousScopes.forEach(console.groupEnd);
-    }
-
-    const calculateScopesToGroupOn = mergingObject && mergingObject.groupByMessage !== false ? calculateScopes(previousScopes, mergingObject.scopes || []) : mergingObject.scopes || [];
-    const scopeControl = calculateScopesToGroupOn.reduce((acc, s) => {
-      acc.begin.push(() => {
-        s.mergingObject && s.mergingObject.collapse ? console.groupCollapsed(s.message) : console.group(s.message);
-      });
-      acc.end.push(() => {
-        console.groupEnd();
-      });
-      return { ...acc,
-        mergingObject: { ...acc.mergingObject,
-          ...s.mergingObject
-        }
-      };
-    }, {
-      begin: [],
-      end: [],
-      mergingObject: {}
-    });
-    scopeControl.begin.forEach(f => f());
-    const newMergingObject = extractOptionsFromMergingObject({ ...scopeControl.mergingObject,
-      ...mergingObject
-    }); // do the actual logging
-
-    newMergingObject ? message ? log[level](message, newMergingObject) : log[level](newMergingObject) : message ? log[level](message) : _utils.noop;
-
-    if (mergingObject && mergingObject.groupByMessage === false) {
-      scopeControl.end.forEach(f => f());
-    } // if we are grouping by messages save the scopes
-
-
-    previousScopes = mergingObject.groupByMessage !== false && mergingObject.scopes ? [...mergingObject.scopes] : [];
-  };
-}; // create a singleton so there is one browser transport
-
-
-exports.createBrowserTransport = createBrowserTransport;
-const browserTransport = createBrowserTransport();
-exports.browserTransport = browserTransport;
-},{"./utils":"2841ed8492cef801fe4e2da244a83beb"}],"2841ed8492cef801fe4e2da244a83beb":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.noop = void 0;
-
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const noop = () => {};
-
-exports.noop = noop;
-},{}],"f47eddaf57008b5a4873047602ba33f4":[function(require,module,exports) {
-
 },{}]},{},["b70fdc1373d4da0fc353836970181880","a046f202507cf221b14ab002f282bba5"], null)
 
-//# sourceMappingURL=app.3f0d2d1a.js.map
+//# sourceMappingURL=app.228c06ba.js.map
