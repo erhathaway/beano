@@ -10,11 +10,13 @@ const transportCaller = (logLevel: Levels, mergeObject: MergingObject): LogEvent
     if (newMergeObject.transports === undefined) {
         throw new Error('Missing transports');
     }
-    newMergeObject.transports.forEach((t) => {
+    newMergeObject.transports.forEach(t => {
         if (typeof paramOne === 'string') {
             t(logLevel, newMergeObject, paramOne);
-        } else {
+        } else if (typeof paramOne === 'object') {
             t(logLevel, newMergeObject, paramTwo);
+        } else {
+            throw new Error('Missing merging object');
         }
     });
 };
