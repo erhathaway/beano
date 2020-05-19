@@ -1,6 +1,9 @@
 # Beano
 
-A Pino inspired logger for the Browser.
+[![bundlephobia size](https://badgen.net/bundlephobia/minzip/beano)](https://bundlephobia.com/result?p=beano)
+
+
+A [Pino](https://github.com/pinojs/pino) inspired logger for the Browser.
 
 ## Usage
 
@@ -54,3 +57,4 @@ Options:
 | -------------- | ------- | --------------------------------------------------------------------------------------- |
 | collapse       | boolean | Whether to use `console.group` or `console.groupCollapsed` for the current child scope. |
 | groupByMessage | boolean | Whether to try and group sequential messages into the same group if they belong.        |
+
