@@ -9,7 +9,6 @@
     "files": [
         "dist"
     ],
-    "default": "app_build/index.js",
     "scripts": {
         "app:start": "npm run clean && parcel app/index.html  --no-cache --no-autoinstall",
         "app:build": "npm run clean && parcel serve app/index.html --no-autoinstall",
