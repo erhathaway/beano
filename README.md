@@ -5,6 +5,8 @@
 
 A [Pino](https://github.com/pinojs/pino) inspired logger for the Browser.
 
+Visit the [Playground](https://erhathaway.github.io/beano/)
+
 ## Usage
 
 ```typescript
