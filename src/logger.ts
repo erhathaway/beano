@@ -1,4 +1,13 @@
-import {MergingObject, ILoggerOptions, Scope, Levels, Message, ILogger, Transport} from './types';
+import {
+    MergingObject,
+    ILoggerOptions,
+    Scope,
+    Levels,
+    Message,
+    ILogger,
+    Transport,
+    ILoggerBuilderOptions
+} from './types';
 import transportCaller from './transport_caller';
 import {browserTransport} from './browser_transport';
 
@@ -7,20 +16,21 @@ export const noop = (): void => {};
 
 export const createLogger = (
     paramOne?: MergingObject | Message,
-    paramTwo?: Message
+    paramTwo?: Message,
+    options?: ILoggerBuilderOptions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): ILogger => {
     // extract existing scopes
     const oldScopes: Scope[] =
-        paramOne && typeof paramOne !== 'string' && paramOne.scopes ? paramOne.scopes : [];
+        paramOne && typeof paramOne === 'object' && paramOne.scopes ? paramOne.scopes : [];
 
     // extract existing transports
     const transports: Transport[] | undefined =
-        paramOne && typeof paramOne !== 'string' && paramOne.transports
+        paramOne && typeof paramOne === 'object' && paramOne.transports
             ? paramOne.transports
             : [browserTransport];
 
-    // extract new mergeObject
+    // extract existing groupByMessage
     const groupByMessage: ILoggerOptions['groupByMessage'] =
         paramOne && typeof paramOne === 'object' && paramOne.groupByMessage !== undefined
             ? paramOne.groupByMessage
@@ -30,30 +40,27 @@ export const createLogger = (
     const message: Message =
         paramOne && typeof paramOne === 'object' && paramTwo && typeof paramTwo === 'string'
             ? paramTwo
+            : typeof paramOne === 'string'
+            ? paramOne
             : undefined;
 
     // extract new mergeObject
     const newMergeObject: MergingObject | undefined =
         paramOne && typeof paramOne === 'object' ? paramOne : undefined; // {transports, scopes: [], groupByMessage, message};
 
-    const newScope: Scope | undefined = newMergeObject
-        ? {message, mergingObject: newMergeObject}
-        : undefined;
+    const newScope: Scope | undefined =
+        newMergeObject && (options == null || (options && options._skipAddingScope === false))
+            ? {message, mergingObject: newMergeObject}
+            : undefined;
     const newScopes: Scope[] = newScope ? [...oldScopes, newScope] : [...oldScopes];
 
     // extract existing log level
     const level: Levels =
-        paramOne && typeof paramOne !== 'string' && paramOne.level ? paramOne.level : 'info';
-
-    // if (transports === undefined) {
-    //     throw new Error(
-    //         'You must define an initial logger transport. For instance `logger({transports: browserTransport})`'
-    //     );
-    // }
+        paramOne && typeof paramOne === 'object' && paramOne.level ? paramOne.level : 'info';
 
     // extract collapse
     const collapse: ILoggerOptions['collapse'] =
-        paramOne && typeof paramOne !== 'string' && paramOne.collapse ? paramOne.collapse : false;
+        paramOne && typeof paramOne === 'object' && paramOne.collapse ? paramOne.collapse : false;
 
     const existingMergeObj: MergingObject = {
         level,
@@ -97,4 +104,6 @@ export const createLogger = (
     };
 };
 
-export default createLogger();
+// The first time this is run we don't want to add scopes.
+// Normally this method is only called when creating scopes
+export default createLogger({}, undefined, {_skipAddingScope: true});

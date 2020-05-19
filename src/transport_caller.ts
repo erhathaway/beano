@@ -4,7 +4,6 @@ const transportCaller = (logLevel: Levels, mergeObject: MergingObject): LogEvent
     paramOne?: object | string,
     paramTwo?: string
 ): void => {
-    console.log(logLevel, mergeObject);
     const newMergeObject =
         typeof paramOne === 'object' ? {...mergeObject, ...paramOne} : mergeObject;
 

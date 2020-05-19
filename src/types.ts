@@ -20,6 +20,10 @@ export interface ILoggerConfig {
     scopes?: Scope[];
 }
 
+export interface ILoggerBuilderOptions {
+    _skipAddingScope?: boolean;
+}
+
 export type MergingObject = {[key: string]: any} & ILoggerOptions & ILoggerConfig;
 export type Message = string | undefined;
 
