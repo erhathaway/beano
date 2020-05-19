@@ -96,5 +96,68 @@ describe('logger', () => {
             expect(console.info.mock.calls).toHaveLength(1);
             expect(console.info.mock.calls).toEqual([['hello', {some: 'data'}]]);
         });
+        it('can log with multiple child loggers with grouping by message', () => {
+            const childOne = newLogger.child('hi');
+            const childTwo = childOne.child('hello');
+
+            childTwo.info({some: 'data'}, 'hello');
+
+            expect(console.group.mock.calls).toHaveLength(2);
+            expect(console.group.mock.calls).toEqual([['hi'], ['hello']]);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(0);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['hello', {some: 'data'}]]);
+
+            jest.clearAllMocks();
+            childOne.info({someOther: 'stuff'}, 'goodbye');
+
+            expect(console.group.mock.calls).toHaveLength(0);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['goodbye', {someOther: 'stuff'}]]);
+
+            jest.clearAllMocks();
+            newLogger.info('hi');
+
+            expect(console.group.mock.calls).toHaveLength(0);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['hi']]);
+        });
+
+        it('can log with multiple child loggers without grouping by message', () => {
+            const childOne = newLogger.child({groupByMessage: false}, 'hi');
+            const childTwo = childOne.child('hello');
+
+            childTwo.info({some: 'data'}, 'hello');
+
+            expect(console.group.mock.calls).toHaveLength(2);
+            expect(console.group.mock.calls).toEqual([['hi'], ['hello']]);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(2);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['hello', {some: 'data'}]]);
+
+            jest.clearAllMocks();
+            childOne.info({someOther: 'stuff'}, 'goodbye');
+
+            expect(console.group.mock.calls).toHaveLength(1);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['goodbye', {someOther: 'stuff'}]]);
+
+            jest.clearAllMocks();
+            newLogger.info('hi');
+
+            expect(console.group.mock.calls).toHaveLength(0);
+            expect(console.groupCollapsed.mock.calls).toHaveLength(0);
+            expect(console.groupEnd.mock.calls).toHaveLength(0);
+            expect(console.info.mock.calls).toHaveLength(1);
+            expect(console.info.mock.calls).toEqual([['hi']]);
+        });
     });
 });

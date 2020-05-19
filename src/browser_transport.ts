@@ -60,9 +60,11 @@ export const createBrowserTransport = (): Transport => {
     let previousScopes: Scope[] = [];
     return (level, mergingObject, message) => {
         const log: Console = console;
-        // if (mergingObject.scopes === undefined) {
-        //     throw new Error('Missing scopes');
-        // }
+
+        // if we have previous scopes we were grouping on, but we are no longer grouping, we need to back out of the groups
+        if (previousScopes.length > 0 && mergingObject && mergingObject.groupByMessage === false) {
+            previousScopes.forEach(console.groupEnd);
+        }
         const calculateScopesToGroupOn =
             mergingObject && mergingObject.groupByMessage !== false
                 ? calculateScopes(previousScopes, mergingObject.scopes || [])
@@ -100,7 +102,12 @@ export const createBrowserTransport = (): Transport => {
         if (mergingObject && mergingObject.groupByMessage === false) {
             scopeControl.end.forEach(f => f());
         }
-        previousScopes = mergingObject.scopes ? [...mergingObject.scopes] : [];
+
+        // if we are grouping by messages save the scopes
+        previousScopes =
+            mergingObject.groupByMessage !== false && mergingObject.scopes
+                ? [...mergingObject.scopes]
+                : [];
     };
 };
 
