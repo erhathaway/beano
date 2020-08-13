@@ -7,6 +7,10 @@ A [Pino](https://github.com/pinojs/pino) inspired logger for the Browser.
 
 Visit the [Playground](https://erhathaway.github.io/beano/)
 
+> Why?
+
+The [console log Web API](https://developer.mozilla.org/en-US/docs/Web/API/Console/log) supports `grouping` log statements into nested groups. Few browser compatible loggers support this at the moment. `Beano` takes advantage of log groups to add support for child loggers that many backend loggers support. Child loggers are nice to have when developing modules or handling code with that has nested scope.
+
 ## Usage
 
 ```typescript
