@@ -9,7 +9,7 @@ Visit the [Playground](https://erhathaway.github.io/beano/)
 
 > Why?
 
-The [console log Web API](https://developer.mozilla.org/en-US/docs/Web/API/Console/log) supports `grouping` log statements into nested groups. Few browser compatible loggers support this at the moment. `Beano` takes advantage of log groups to add support for child loggers - a feature that many backend loggers support. Child loggers are nice to have when developing modules or handling code with that has nested scope.
+The [console log Web API](https://developer.mozilla.org/en-US/docs/Web/API/Console/log) supports `grouping` log statements into nested groups. Few browser compatible loggers support this at the moment. `Beano` takes advantage of log groups to add support for child loggers - a feature that many backend loggers support. Child loggers are nice to have when developing modules or handling code that has nested scope.
 
 ## Usage
 
